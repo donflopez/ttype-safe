@@ -1,0 +1,43 @@
+{
+  "name": "type-safe",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.15.11",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "chai": "^4.3.7",
+    "diff": "^5.1.0",
+    "eslint": "^7.32.0",
+    "mocha": "^10.2.0",
+    "ttypescript": "^1.5.15",
+    "typescript": "~5.0.3"
+  },
+  "peerDependencies": {
+    "typescript": "^4.8.3 | ^5.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "npx eslint",
+    "test": "tsc && cd ./tests && ttsc && mocha dist/integrated/**/*.js && node ./dist/snapshots/index",
+    "manual": "tsc && cd ./test && ttsc",
+    "prepublishOnly": "tsc",
+    "docs": "npx ts-docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/donflopez/type-safe.git"
+  },
+  "keywords": [
+    "type", "validator", "safe", "typescript", "runtime", "validation", "jsdoc", "jsdoc-comments"
+  ],
+  "author": "donflopez",
+  "license": "MIT",
+  "bugs": {
+    "url": ""
+  },
+  "homepage": ""
+}
