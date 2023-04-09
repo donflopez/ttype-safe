@@ -11,6 +11,44 @@ With TypeSafe, you can create more robust and reliable TypeScript applications, 
 
 ## Using it with [ttypescript]()
 
+To use Type-Safe with [ttypescript](), you need to add the following to your `tsconfig.json` file:
+
+```json
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "transform": "type-safe"
+      }
+    ]
+  }
+}
+```
+
+And then you need to build your project with `ttsc` instead of `tsc`.
+
+## Using it with jest
+
+To use Type-Safe with jest, you need to add the following to your `jest.config.js` and use ts-jest file:
+
+```json
+// Package.json
+"jest": {
+    "transform": {
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "astTransformers": {
+            "before": [
+              "./src/index.ts"
+            ]
+          }
+        }
+      ]
+    }
+  }
+```
+
 ## Example using TypeSafe
 ```ts
 import { $schema, validate } from "./validate";
@@ -19,7 +57,7 @@ import { $schema, validate } from "./validate";
 type Person = {
   /**
    * The name property must be a string with at least 2 characters
-   * @minlength 2
+   * @min 2
    */
   name: string;
 
@@ -38,12 +76,101 @@ type Person = {
 };
 
 // Create a validator function for the Person type
-export const PersonValidation = validate<Person>($schema<Person>());
+export const PersonValidator = validate<Person>($schema<Person>());
 
 // Test the validator function with sample data
 const validPerson = { name: "John", age: 35, email: "john@example.com" };
 const invalidPerson = { name: "J", age: 150, email: "invalid-email" };
 
-console.log(PersonValidation(validPerson)); // good
-console.log(PersonValidation(invalidPerson)); // bad
+console.log(PersonValidator(validPerson)); // good
+console.log(PersonValidator(invalidPerson)); // bad
+```
+
+# Features
+
+## Strings
+
+### Tags:
+#### 1. Regex
+```ts
+type Car {
+  /**
+   * @regex /\d[A-Z]{3}\d{3}/
+   */
+  plate: string;
+}
+const CarValidator = validate<Car>($schema<Car>());
+CarValidator({ plate: "1ABC123" }); // good
+CarValidator({ plate: "1ABC12" }); // bad
+```
+
+#### 2. Alphanumeric
+```ts
+type Car {
+  /**
+   * @alphanumeric
+   */
+  plate: string;
+}
+const CarValidator = validate<Car>($schema<Car>());
+CarValidator({ plate: "1ABC123" }); // good
+CarValidator({ plate: "1ABC12#" }); // bad
+```
+
+#### 3. Min
+```ts
+type Car {
+  /**
+   * @min 3
+   */
+  plate: string;
+}
+const CarValidator = validate<Car>($schema<Car>());
+CarValidator({ plate: "1ABC123" }); // good
+CarValidator({ plate: "1A" }); // bad
+```
+
+#### 4. Max
+```ts
+type Car {
+  /**
+   * @max 3
+   */
+  plate: string;
+}
+
+const CarValidator = validate<Car>($schema<Car>());
+CarValidator({ plate: "1ABC123" }); // good
+CarValidator({ plate: "1ABC1234" }); // bad
+```
+
+## Numbers
+
+### Tags:
+#### 1. Min
+```ts
+type Human {
+  /**
+   * @min 0
+   */
+  age: number;
+}
+
+const HumanValidator = validate<Human>($schema<Human>());
+HumanValidator({ age: 0 }); // good
+HumanValidator({ age: -1 }); // bad
+```
+
+#### 2. Max
+```ts
+type Human {
+  /**
+   * @max 100
+   */
+  age: number;
+}
+
+const HumanValidator = validate<Human>($schema<Human>());
+HumanValidator({ age: 100 }); // good
+HumanValidator({ age: 101 }); // bad
 ```

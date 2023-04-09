@@ -44,13 +44,13 @@ const TAGS = {
     alphanumeric: (value: string) => TAGS.regex(value, "/^[a-zA-Z0-9]+$/"),
 
     /**
-     * Test if the string is not longer than the provided length
+     * Test if the string is shorter than the provided length
      * 
      * @example
      * ```ts
      * type Person = {
      * /**
-     * * @maxlength 10
+     * * @max 10
      * *\/
      * lastName: string;
      * }
@@ -60,7 +60,26 @@ const TAGS = {
      * @param length
      * @returns
      */
-    maxlength: (value: string, length: string) => value.length <= parseInt(length),
+    max: (value: string, length: string) => value.length <= parseInt(length),
+
+    /**
+     * Test if the string is larger than the provided length
+     * 
+     * @example
+     * ```ts
+     * type Person = {
+     * /**
+     * * @min 10
+     * *\/
+     * lastName: string;
+     * }
+     * ```
+     * 
+     * @param value
+     * @param length
+     * @returns
+     */
+    min: (value: string, length: string) => value.length >= parseInt(length),
 };
 
 export const validateString = createValidatorFor(isString, TAGS);
