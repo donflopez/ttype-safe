@@ -8,7 +8,6 @@ export const createValidatorFor = (isTypeFn: isTypeFn, rules: Record<string, (va
     for (const [tag, comment] of tags) {
         if (rules[tag]) {
             if (!rules[tag](value, comment)) {
-                console.log("failed", tag, comment, value);
                 return false;
             }
         }

@@ -1,24 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { validators } from "./validations";
 
+type JsonType = {
+    type: string;
+    optional: boolean;
+    union: boolean;
+    literal: boolean;
+    array: boolean;
+    primitive: boolean;
+    tags: string[][];
+    children?: JsonSchema;
+}
+
 type JsonSchema = {
-    [prop: string]: {
-        type: string;
-        optional: boolean;
-        union: boolean;
-        literal: boolean;
-        tags: string[][];
-        children?: JsonSchema;
-    }
+    [prop: string]: JsonType
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const $schema = <T>(): string => "";
 
-const validateUnion = (json: Array<JsonSchema | string>, input: any) => {
+const getAllRequiredKeys = (json: JsonSchema) => {
+    return Object.keys(json).filter(key => !json[key].optional);
+};
 
+const validateUnion = (json: Array<JsonType>, input: any) => {
+    let valid = true;
     if (json.includes(input)) {
-        return true;
+        return valid;
     }
 
     for (const schema of json) {
@@ -26,7 +34,7 @@ const validateUnion = (json: Array<JsonSchema | string>, input: any) => {
             continue;
         }
 
-        if (validate(schema)(input)) {
+        if (validateJsonType(schema, input)) {
             return true;
         }
     }
@@ -34,34 +42,105 @@ const validateUnion = (json: Array<JsonSchema | string>, input: any) => {
     return false;
 };
 
-export const validate = <T>(json: string | JsonSchema) => (input: T) => {
-    const obj = typeof json === "string" ? JSON.parse(json) as JsonSchema : json;
+const validateArray = (json: Array<JsonType>, input: any) => {
+    if (!Array.isArray(input)) {
+        return false;
+    }
 
-    for (const key of Object.keys(obj)) {
-        const { type, optional, union, tags, children } = obj[key];
-        const val = (input as any)[key];
-        if (optional && val === undefined) {
-            continue;
-        }
+    if (!json.length && !input.length) {
+        return true;
+    }
 
-        if (children && !union) {
-            if (!validate(children)(val)) {
+    if (json.length === 1) {
+        for (const item of input) {
+            if (!validateJsonType(json[0], item)) {
                 return false;
             }
-            continue;
         }
+        return true;
+    }
 
-        if (union && children) {
-            if (!validateUnion(children as unknown as JsonSchema[], val)) {
-                return false;
-            }
-            continue;
-        }
-
-        if (!validators[type](val, tags)) {
+    for (const item of input) {
+        if (!validateUnion(json, item)) {
             return false;
         }
     }
 
     return true;
+};
+
+
+const validateObject = (json: JsonSchema, input: any) => {
+    const requiredKeys = getAllRequiredKeys(json);
+
+    for (const key of requiredKeys) {
+        if (!input.hasOwnProperty(key)) {
+            return false;
+        }
+    }
+
+    for (const key of Object.keys(input)) {
+        const val = input[key];
+        const schema = json[key];
+
+        if (!schema) {
+            continue;
+        }
+
+        if (!validateJsonType(schema, val)) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+const validateJsonType = (json: JsonType, input: any) => {
+    const { type, optional, union, tags, children, array, primitive, literal } = json;
+
+    if (optional && (input === undefined || input === null)) {
+        return true
+    }
+
+    if (literal) {
+        if (input !== children) {
+            return false;
+        }
+        return true;
+    }
+
+    if (primitive) {
+        if (!validators[type](input, tags)) {
+            return false;
+        }
+        return true;
+    }
+
+    if (array && children && children.length) {
+        if (!validateArray(children as unknown as JsonType[], input)) {
+            return false;
+        }
+        return true;
+    }
+
+    if (union && children && children.length) {
+        if (!validateUnion(children as unknown as JsonType[], input)) {
+            return false;
+        }
+        return true;
+    }
+    if (children && typeof children === "object" && !union && !primitive && !array) {
+        if (!validateObject(children as JsonSchema, input)) {
+            return false;
+        }
+        return true;
+    }
+
+    return true;
+}
+
+export const validate = <T>(json: string) => (input: T) => {
+    const obj = JSON.parse(json) as JsonType;
+
+    return validateJsonType(obj, input);
 };
