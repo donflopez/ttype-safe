@@ -80,6 +80,27 @@ const TAGS = {
      * @returns
      */
     min: (value: string, length: string) => value.length >= parseInt(length),
+
+    /**
+     * Test if the string is an email
+     *
+     * @example
+     * ```ts
+     * type Person = {
+     * /**
+     * * @email
+     * *\/
+     * email: string;
+     * }
+     * ```
+     *
+     * @param value
+     * @returns
+     */
+    email: (value: string) => {
+        const emailRegExp = new RegExp(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/);
+        return emailRegExp.test(value);
+    },
 };
 
 export const validateString = createValidatorFor(isString, TAGS);
