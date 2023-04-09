@@ -1,7 +1,7 @@
 {
-  "name": "type-safe",
-  "version": "0.1.0",
-  "description": "",
+  "name": "ttype-safe",
+  "version": "0.2.0",
+  "description": "TypeScript runtime type validator generator that creates validation functions from TypeScript types with custom validation rules defined using JSDoc comments.",
   "main": "dist/index.js",
   "devDependencies": {
     "@types/jest": "^29.x",
@@ -42,9 +42,9 @@
   "author": "donflopez",
   "license": "MIT",
   "bugs": {
-    "url": ""
+    "url": "https://github.com/donflopez/type-safe/issues"
   },
-  "homepage": "",
+  "homepage": "https://github.com/donflopez",
   "jest": {
     "transform": {
       "^.+\\.tsx?$": [

@@ -110,6 +110,10 @@ const validateJsonType = (json: JsonType, input: any) => {
     }
 
     if (primitive) {
+        if (!validators[type]) {
+            return true;
+        }
+
         if (!validators[type](input, tags)) {
             return false;
         }

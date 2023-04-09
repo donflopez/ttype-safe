@@ -155,4 +155,38 @@ describe('Test type tags', () => {
         expect(NumberAliasValidator(99)).toBe(true);
         // expect(NumberAliasValidator(100)).toBe(false);
     });
+
+    test('Non-existent tags do nothing', () => {
+        type Person = {
+            /**
+             * @doesNotExist
+             */
+            name: string;
+
+            fn: () => void;
+        }
+        const PersonValidator = validate<Person>($schema<Person>());
+        expect(PersonValidator({ name: 'Francisco', fn: () => void 0 })).toBe(true);
+    });
+
+    test('Non-supported primitives do nothing', () => {
+        type Person = {
+            /**
+             * @max 99
+             */
+            name: bigint;
+
+            /**
+             * @max 99
+             * @min 0
+             * @alphanumeric
+             * @regex /abc/
+             * @length 10
+             */
+            symbol: symbol;
+        }
+        const PersonValidator = validate<Person>($schema<Person>());
+
+        expect(PersonValidator({ name: 123n, symbol: Symbol("Some") })).toBe(true);
+    });
 });

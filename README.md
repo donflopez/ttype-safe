@@ -174,3 +174,50 @@ const HumanValidator = validate<Human>($schema<Human>());
 HumanValidator({ age: 100 }); // good
 HumanValidator({ age: 101 }); // bad
 ```
+
+## Not Supported:
+- Type Aliases jsdoc tags are not supported yet:
+```ts
+/**
+ * @min 0
+ * @max 100
+ */
+type Age = number;
+// Doesn't work yet, it will only validate the type as a number but no
+// the min and max tags
+const AgeValidator = validate<Age>($schema<Age>());
+```
+- BigInt is not supported and tags will be ignored:
+```ts
+type Human {
+  /**
+   * @min 0
+   */
+  age: bigint;
+}
+// This will do nothing, nor validate the type nor the tags.
+const HumanValidator = validate<Human>($schema<Human>());
+```
+
+- Symbol is not supported and tags will be ignored:
+```ts
+type Human {
+  /**
+   * @min 0
+   */
+  age: symbol;
+}
+// This will do nothing, nor validate the type nor the tags.
+const HumanValidator = validate<Human>($schema<Human>());
+```
+- Functions are not supported and will probably never be supported;
+```ts
+type Human {
+  /**
+   * @min 0
+   */
+  age: () => void;
+}
+// This will do nothing, nor validate the type nor the tags.
+const HumanValidator = validate<Human>($schema<Human>());
+```
