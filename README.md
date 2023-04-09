@@ -40,7 +40,7 @@ To use Type-Safe with jest, you need to add the following to your `jest.config.j
         {
           "astTransformers": {
             "before": [
-              "./src/index.ts"
+              "ttype-safe"
             ]
           }
         }

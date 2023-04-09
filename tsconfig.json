@@ -6,7 +6,8 @@
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true
+    "strict": true,
+    "removeComments": true,
   },
   "exclude": ["./tests", "./test", "./dist", "./node_modules", "./playground", "./examples"]
 }
