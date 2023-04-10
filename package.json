@@ -1,6 +1,6 @@
 {
   "name": "ttype-safe",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "TypeScript runtime type validator generator that creates validation functions from TypeScript types with custom validation rules defined using JSDoc comments.",
   "main": "dist/index.js",
   "devDependencies": {

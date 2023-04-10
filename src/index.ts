@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as ts from "typescript";
-import type { TsCompilerInstance } from 'ts-jest/dist/types'
+import type { TsCompilerInstance } from "ts-jest/dist/types";
 
 const isOfTypeArray = (checker: ts.TypeChecker, type: ts.Type) => ts.isArrayTypeNode(checker.typeToTypeNode(type, undefined, undefined)!);
 
@@ -20,7 +20,7 @@ const isPrimitiveType = (type: ts.Type): boolean => {
         default:
             return false;
     }
-}
+};
 
 const extractJsDoc = (node: ts.PropertySignature & {
     jsDoc: Array<{
@@ -50,7 +50,7 @@ const buildPrimitiveType = (type: ts.Type, checker: ts.TypeChecker, tags?: strin
         primitive: isPrimitive,
         tags: tags || [],
     };
-}
+};
 
 const buildType = (type: ts.Type, checker: ts.TypeChecker) => {
     const symbol = type.getSymbol();
@@ -89,10 +89,10 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker): any {
         return buildPrimitiveType(type, checker);
     }
 
-    const symbol = type.getSymbol();
+    const symbol = type.getSymbol() || type.aliasSymbol;
     if (!symbol) {
         if (type.isLiteral()) {
-            return checker.typeToString(type).replaceAll("\"", "")
+            return checker.typeToString(type).replaceAll("\"", "");
         }
 
         if (isPrimitiveType(type)) {
@@ -175,7 +175,7 @@ const transformer = (program: ts.Program) => (context: ts.TransformationContext)
 // Jest-transformer
 export const version = Date.now();
 // Used for constructing cache key
-export const name = 'type-safe-transformer';
+export const name = "type-safe-transformer";
 export const factory = (compilerInstance: TsCompilerInstance) => transformer(compilerInstance.program!);
 
 export default (program: ts.Program, config?: any) => transformer(program);

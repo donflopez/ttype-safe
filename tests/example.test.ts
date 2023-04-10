@@ -189,4 +189,98 @@ describe('Test type tags', () => {
 
         expect(PersonValidator({ name: 123n, symbol: Symbol("Some") })).toBe(true);
     });
+
+    test('Generic types', () => {
+        type Job = {
+            title: string;
+            /**
+             * @min 0
+             * @max 99
+             */
+            company: number;
+        }
+
+        type GenericPerson<T> = {
+            name: string;
+            age: number;
+            job: T;
+        }
+
+        const GenericPersonValidator = validate<GenericPerson<Job>>($schema<GenericPerson<Job>>());
+
+        expect(GenericPersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 1 } })).toBe(true);
+        expect(GenericPersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: '23' as any } })).toBe(false);
+        expect(GenericPersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 123 } })).toBe(false);
+    });
+
+    test('Unresolved generic', () => {
+        type GenericPerson<T> = {
+            name: string;
+            age: number;
+            job: T;
+        }
+
+        const GenericPersonValidator = validate<GenericPerson<any>>($schema<GenericPerson<any>>());
+
+        expect(GenericPersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 1 } })).toBe(true);
+        expect(GenericPersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: '23' as any } })).toBe(true);
+        expect(GenericPersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 123 } })).toBe(true);
+    });
+
+    test('Generic with extended type', () => {
+        type Job = {
+            title: string;
+            /**
+             * @min 0
+             * @max 99
+             */
+            company: number;
+        }
+
+        type GenericPerson<T extends Job> = {
+            name: string;
+            age: number;
+            job: T;
+        }
+
+        type Person = GenericPerson<Job>;
+
+        const PersonValidator = validate<Person>($schema<Person>());
+
+        expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 1 } })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: '23' as any } })).toBe(false);
+        expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 123 } })).toBe(false);
+    });
+
+    test('Generic with extended type and type extends', () => {
+        type Job = {
+            title: string;
+            /**
+             * @min 0
+             * @max 99
+             */
+            company: number;
+        }
+
+        type AdvancedJob = Job & {
+            /**
+             * @min 1000000
+             * @max 10000000
+            */
+            salary: number;
+        }
+
+        type GenericPerson<T extends Job> = {
+            name: string;
+            age: number;
+            job: T;
+        }
+
+        const PersonValidator = validate<GenericPerson<AdvancedJob>>($schema<GenericPerson<AdvancedJob>>());
+
+        expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 1, salary: 1000000 } })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 'ads' as any, salary: 1000000 } })).toBe(false);
+        expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 123, salary: 1000000 } })).toBe(false);
+        expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 1, salary: 10000 } })).toBe(false);
+    });
 });
