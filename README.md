@@ -1,11 +1,5 @@
 # TypeSafe
-TypeSafe is a TypeScript library that allows you to generate runtime validation rules from TypeScript types defined in your code. By analyzing your type definitions at build time, TypeSafe creates a set of validators that can be used to validate data structures at runtime, ensuring that they conform to the expected TypeScript types.
-
-With TypeSafe, you can also add custom rules to your TypeScript types using JSDoc comments. Simply add a comment to your type definition that specifies the desired validation rule using one of the supported JSDoc tags: @regex, @max, @min, or @alphanumeric. TypeSafe will then generate a custom validator that enforces the specified rule at runtime.
-
-TypeSafe integrates easily with your existing TypeScript workflow, and can be configured to generate validation rules for complex nested types, including arrays, tuples, and object literals. With the support for custom rules, you can create even more precise and tailored validation logic that fits your specific use case.
-
-With TypeSafe, you can create more robust and reliable TypeScript applications, with less effort and fewer errors. Try it out today, and see how easy it is to add runtime validation to your TypeScript projects!
+TypeSafe is a TypeScript library that generates runtime validation rules from your code's TypeScript types. It analyzes your type definitions at build time and creates validators for validating data structures at runtime, ensuring they conform to expected types. You can add custom rules to types using JSDoc comments with tags like @regex and @max. It's easy to integrate with your TypeScript workflow and supports complex nested types like arrays and tuples. It helps create more reliable applications with less effort and fewer errors.
 
 # Getting Started
 
