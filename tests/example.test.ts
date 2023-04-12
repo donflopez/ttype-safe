@@ -326,4 +326,38 @@ describe('Test type tags', () => {
         // Not valid
         expect(JobValidator({ role: 'some' as any, company: 'Amazon', level: 'L5' })).toBe(false);
     });
+
+    test('Optional property', () => {
+        type Company = {
+            name: string;
+            /**
+             * @min 0
+             * @max 99
+            */
+            employees: number;
+
+            public?: boolean;
+        }
+        type Person = {
+            name: string;
+            // age?: number;
+            company?: Company;
+
+            /**
+             * @min 0
+             */
+            age?: number;
+        }
+
+        const PersonValidator = validate<Person>($schema<Person>());
+        console.log($schema<Person>());
+        expect(PersonValidator({ name: 'Francisco' })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10} })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: 1 })).toBe(true);
+
+
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 150, public: true} })).toBe(false);
+
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: -1 })).toBe(false);
+    });
 });

@@ -6,19 +6,19 @@ const isOfTypeArray = (checker: ts.TypeChecker, type: ts.Type) => ts.isArrayType
 
 const isPrimitiveType = (type: ts.Type): boolean => {
     switch (type.getFlags()) {
-        case ts.TypeFlags.String:
-        case ts.TypeFlags.Number:
-        case ts.TypeFlags.Boolean:
-        case ts.TypeFlags.EnumLiteral:
-        case ts.TypeFlags.BigIntLiteral:
-        case ts.TypeFlags.ESSymbol:
-        case ts.TypeFlags.Void:
-        case ts.TypeFlags.Undefined:
-        case ts.TypeFlags.Null:
-        case ts.TypeFlags.Never:
-            return true;
-        default:
-            return false;
+    case ts.TypeFlags.String:
+    case ts.TypeFlags.Number:
+    case ts.TypeFlags.Boolean:
+    case ts.TypeFlags.EnumLiteral:
+    case ts.TypeFlags.BigIntLiteral:
+    case ts.TypeFlags.ESSymbol:
+    case ts.TypeFlags.Void:
+    case ts.TypeFlags.Undefined:
+    case ts.TypeFlags.Null:
+    case ts.TypeFlags.Never:
+        return true;
+    default:
+        return false;
     }
 };
 
@@ -52,14 +52,16 @@ const buildPrimitiveType = (type: ts.Type, checker: ts.TypeChecker, tags?: strin
     };
 };
 
-const buildType = (type: ts.Type, checker: ts.TypeChecker) => {
+const buildType = (type: ts.Type, checker: ts.TypeChecker, tags?: string[][]) => {
     const symbol = type.getSymbol();
 
-    let tags;
     if (symbol) {
         const prop = symbol.getDeclarations()![0];
         if (prop && ts.isPropertySignature(prop)) {
-            tags = extractJsDoc(prop as any)?.filter((x) => x);
+            const newTags = extractJsDoc(prop as any)?.filter((x) => x);
+            if (newTags.length) {
+                tags = newTags;
+            }
         }
     }
     const isOptional = type.getFlags() & ts.TypeFlags.Undefined ? true : false;
@@ -106,9 +108,9 @@ const buildEnumType = (type: ts.Type, checker: ts.TypeChecker) => {
 };
 
 
-function typeToJson(type: ts.Type, checker: ts.TypeChecker): any {
+function typeToJson(type: ts.Type, checker: ts.TypeChecker, tags?: string[][]): any {
     if (type.isUnion()) {
-        return type.types.map((t) => buildType(t, checker)).filter(c => c);
+        return type.types.map((t) => buildType(t, checker, tags)).filter(c => c.type !== "undefined");
     }
 
     if (isPrimitiveType(type)) {
@@ -145,7 +147,7 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker): any {
         const propName = prop.getName();
         const propType = checker.getTypeOfSymbolAtLocation(prop, symbol.getDeclarations()![0]);
         const typeName = checker.typeToString(propType);
-        const isOptional = propType.getFlags() & ts.TypeFlags.Undefined ? true : false;
+        const isOptional = prop.getFlags() & ts.SymbolFlags.Optional ? true : false;
         const isUnion = propType.getFlags() & ts.TypeFlags.Union ? true : false;
         const isArray = isOfTypeArray(checker, propType);
         const isPrimitive = isPrimitiveType(propType) || typeName === "boolean";
@@ -166,7 +168,7 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker): any {
             json[propName].children = buildEnumType(propType, checker);
         }
         else if (!isPrimitive) {
-            json[propName].children = typeToJson(propType, checker);
+            json[propName].children = typeToJson(propType, checker, tags);
         }
     }
 

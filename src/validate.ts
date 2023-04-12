@@ -102,6 +102,14 @@ const validateJsonType = (json: JsonType, input: any) => {
         return true;
     }
 
+    if (optional && children && children.length) {
+        if (!validateJsonType(children[0], input)) {
+            return false;
+        }
+
+        return true;
+    }
+
     if (literal) {
         if (input !== children) {
             return false;
