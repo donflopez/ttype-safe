@@ -24,7 +24,7 @@ const getAllRequiredKeys = (json: JsonSchema) => {
 };
 
 const validateUnion = (json: Array<JsonType>, input: any) => {
-    let valid = true;
+    const valid = true;
     if (json.includes(input)) {
         return valid;
     }
@@ -99,7 +99,7 @@ const validateJsonType = (json: JsonType, input: any) => {
     const { type, optional, union, tags, children, array, primitive, literal } = json;
 
     if (optional && (input === undefined || input === null)) {
-        return true
+        return true;
     }
 
     if (literal) {
@@ -141,7 +141,7 @@ const validateJsonType = (json: JsonType, input: any) => {
     }
 
     return true;
-}
+};
 
 export const validate = <T>(json: string) => (input: T) => {
     const obj = JSON.parse(json) as JsonType;

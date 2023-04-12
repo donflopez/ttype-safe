@@ -283,4 +283,47 @@ describe('Test type tags', () => {
         expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 123, salary: 1000000 } })).toBe(false);
         expect(PersonValidator({ name: 'Francisco', age: 25, job: { title: 'John', company: 1, salary: 10000 } })).toBe(false);
     });
+
+    test('Enums', () => {
+        enum Role {
+            Admin = 'admin',
+            Manager = 'manager',
+        }
+
+        type Job = {
+            role: Role;
+            company: string;
+            level: 'L4' | 'L5';
+        }
+
+        const JobValidator = validate<Job>($schema<Job>());
+        // Valid
+        expect(JobValidator({ role: Role.Admin, company: 'Amazon', level: 'L4' })).toBe(true);
+        expect(JobValidator({ role: 'admin' as any, company: 'Amazon', level: 'L5' })).toBe(true);
+
+        // Not valid
+        expect(JobValidator({ role: 'some' as any, company: 'Amazon', level: 'L5' })).toBe(false);
+    });
+
+    test('Enums with number', () => {
+        enum Role {
+            Admin,
+            Manager,
+        }
+
+        type Job = {
+            role: Role;
+            company: string;
+            level: 'L4' | 'L5';
+        }
+
+        const JobValidator = validate<Job>($schema<Job>());
+
+        // Valid
+        expect(JobValidator({ role: Role.Admin, company: 'Amazon', level: 'L4' })).toBe(true);
+        expect(JobValidator({ role: 0, company: 'Amazon', level: 'L5' })).toBe(true);
+
+        // Not valid
+        expect(JobValidator({ role: 'some' as any, company: 'Amazon', level: 'L5' })).toBe(false);
+    });
 });

@@ -66,6 +66,7 @@ const buildType = (type: ts.Type, checker: ts.TypeChecker) => {
     const isUnion = type.getFlags() & ts.TypeFlags.Union ? true : false;
     const isArray = isOfTypeArray(checker, type);
     const isPrimitive = isPrimitiveType(type);
+    const isEnum = type.getFlags() & ts.TypeFlags.EnumLike ? true : false;
 
     return {
         type: checker.typeToString(type),
@@ -74,9 +75,34 @@ const buildType = (type: ts.Type, checker: ts.TypeChecker) => {
         literal: type.isLiteral(),
         array: isArray,
         primitive: isPrimitive,
+        isEnum: isEnum,
         tags: tags || [],
         children: isPrimitive ? undefined : typeToJson(type, checker),
     };
+};
+
+const buildEnumType = (type: ts.Type, checker: ts.TypeChecker) => {
+    const symbol = type.getSymbol();
+
+    if (symbol) {
+        const declaration = symbol.getDeclarations()![0];
+
+        if (ts.isEnumDeclaration(declaration)) {
+            return declaration.members.map((member) => {
+                return {
+                    type: member.name.getText(),
+                    optional: false,
+                    union: false,
+                    literal: true,
+                    array: false,
+                    primitive: false,
+                    isEnum: false,
+                    tags: [],
+                    children: checker.getConstantValue(member),
+                };
+            });
+        }
+    }
 };
 
 
@@ -123,6 +149,7 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker): any {
         const isUnion = propType.getFlags() & ts.TypeFlags.Union ? true : false;
         const isArray = isOfTypeArray(checker, propType);
         const isPrimitive = isPrimitiveType(propType) || typeName === "boolean";
+        const isEnum = propType.getFlags() & ts.TypeFlags.EnumLike ? true : false;
 
         json[propName] = {
             type: typeName,
@@ -131,10 +158,14 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker): any {
             literal: propType.isLiteral(),
             array: isArray,
             primitive: isPrimitive,
+            enum: isEnum,
             tags: tags || [],
         };
 
-        if (!isPrimitive) {
+        if (isEnum) {
+            json[propName].children = buildEnumType(propType, checker);
+        }
+        else if (!isPrimitive) {
             json[propName].children = typeToJson(propType, checker);
         }
     }
