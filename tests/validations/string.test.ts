@@ -1,4 +1,4 @@
-import { validate, $schema } from '../../src/validate'
+import { validate, $schema } from '../../src/validation'
 
 describe('Test string tags', () => {
     test('regex', () => {

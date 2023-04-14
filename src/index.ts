@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as ts from "typescript";
 import type { TsCompilerInstance } from "ts-jest/dist/types";
-export { validate, $schema } from "./validate"
 
 const isOfTypeArray = (checker: ts.TypeChecker, type: ts.Type) => ts.isArrayTypeNode(checker.typeToTypeNode(type, undefined, undefined)!);
 

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "target": "ES2021",
     "module": "commonjs",
+    "moduleResolution": "NodeNext",
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",

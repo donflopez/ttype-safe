@@ -1,4 +1,4 @@
-import { validate, $schema } from '../src/validate'
+import { validate, $schema } from '../src/validation'
 
 describe('Test type tags', () => {
     test('Person type primitives', () => {
@@ -350,7 +350,7 @@ describe('Test type tags', () => {
         }
 
         const PersonValidator = validate<Person>($schema<Person>());
-        console.log($schema<Person>());
+
         expect(PersonValidator({ name: 'Francisco' })).toBe(true);
         expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10} })).toBe(true);
         expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: 1 })).toBe(true);

@@ -3,6 +3,10 @@
   "version": "0.6.0",
   "description": "TypeScript runtime type validator generator that creates validation functions from TypeScript types with custom validation rules defined using JSDoc comments.",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./validate": "./dist/validation.js"
+  },
   "devDependencies": {
     "@types/jest": "^29.x",
     "@types/node": "^18.15.11",

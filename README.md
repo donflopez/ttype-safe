@@ -1,18 +1,28 @@
-# TypeSafe
+# ttype-Safe
 TypeSafe is a TypeScript library that generates runtime validation rules from your code's TypeScript types. It analyzes your type definitions at build time and creates validators for validating data structures at runtime, ensuring they conform to expected types. You can add custom rules to types using JSDoc comments with tags like @regex and @max. It's easy to integrate with your TypeScript workflow and supports complex nested types like arrays and tuples. It helps create more reliable applications with less effort and fewer errors.
 
 # Getting Started
 
-## Using it with [ttypescript]()
+## Importing ttype-safe
+
+```package.json
+"devDependencies": {
+  "ttypescript": "^1.5.12",
+  "ttype-safe": "^0.6.0"
+},
+```
+
+## Configuring [ttypescript]()
 
 To use Type-Safe with [ttypescript](), you need to add the following to your `tsconfig.json` file:
 
 ```json
 {
   "compilerOptions": {
+    "moduleResolution": "node16", // or NodeNext
     "plugins": [
       {
-        "transform": "type-safe"
+        "transform": "ttype-safe"
       }
     ]
   }
@@ -21,7 +31,40 @@ To use Type-Safe with [ttypescript](), you need to add the following to your `ts
 
 And then you need to build your project with `ttsc` instead of `tsc`.
 
+How to create validators:
+
+```ts
+import { $schema, validate } from "ttype-safe/validate";
+
+// Define your TypeScript types with custom validation rules using JSDoc comments
+type Person = {
+  /**
+   * The name property must be a string with at least 2 characters
+   * @min 2
+   */
+  name: string;
+
+  /**
+   * The age property must be a number between 0 and 120
+   * @min 0
+   * @max 120
+   */
+  age: number;
+
+  /**
+   * The email property must be a string that contains an '@' character
+   * @regex /@/
+   */
+  email: string;
+};
+
+// Create a validator function for the Person type
+export const PersonValidator = validate<Person>($schema<Person>());
+```
+
 ## Using it with jest
+
+> Note: This is only supported with ts-jest v29 or higher.
 
 To use Type-Safe with jest, you need to add the following to your `jest.config.js` and use ts-jest file:
 
@@ -45,7 +88,7 @@ To use Type-Safe with jest, you need to add the following to your `jest.config.j
 
 ## Example using TypeSafe
 ```ts
-import { $schema, validate } from "./validate";
+import { $schema, validate } from "ttype-safe/validate";
 
 // Define your TypeScript types with custom validation rules using JSDoc comments
 type Person = {
