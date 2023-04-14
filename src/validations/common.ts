@@ -1,6 +1,8 @@
-type isTypeFn = (x: any) => boolean;
+export type isTypeFn = (x: any) => boolean;
 
-export const createValidatorFor = (isTypeFn: isTypeFn, rules: Record<string, (value: any, comment: string) => boolean>) => (value: any, tags: string[][]) => {
+export type Tags = Record<string, (value: any, comment: string) => boolean>;
+
+export const createValidatorFor = <T>(isTypeFn: isTypeFn, rules: Tags) => (value: T, tags: string[][]) => {
     if (!isTypeFn(value)) {
         return false;
     }

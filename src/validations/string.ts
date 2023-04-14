@@ -1,4 +1,4 @@
-import { createValidatorFor } from "./common";
+import { Tags, createValidatorFor } from "./common";
 
 const isString = (x: any): x is string => typeof x === "string";
 
@@ -104,3 +104,5 @@ const TAGS = {
 };
 
 export const validateString = createValidatorFor(isString, TAGS);
+
+export const customStringValidator = (tags: Tags) => createValidatorFor<string>(isString, {...TAGS, ...tags});

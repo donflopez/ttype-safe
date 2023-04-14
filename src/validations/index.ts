@@ -1,9 +1,20 @@
 import { validateBoolean } from "./boolean";
-import { validateNumber } from "./number";
-import { validateString } from "./string";
+import { customNumberValidator, validateNumber } from "./number";
+import { customStringValidator, validateString } from "./string";
 
-export const validators: { [type: string]: (value: unknown, tags: string[][]) => boolean } = {
+type Validators =  { [type: string]: (value: any, tags: string[][]) => boolean };
+
+export const validators: Validators = {
     string: validateString,
     number: validateNumber,
     boolean: validateBoolean,
+};
+
+export type TagValidator<T> = {[tag: string]: (value: T, tagInput: string) => boolean};
+export const updateValidators = (newValidators?: { string?: TagValidator<string>, number?: TagValidator<number>}): Validators   => {
+    return {
+        ...validators,
+        string: customStringValidator(newValidators?.string || {}),
+        number: customNumberValidator(newValidators?.number || {})
+    };
 };

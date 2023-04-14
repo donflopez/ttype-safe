@@ -1,4 +1,4 @@
-import { validate, $schema } from '../src/validation'
+import { validate, $schema, createCustomValidate } from '../src/validation'
 
 describe('Test type tags', () => {
     test('Person type primitives', () => {
@@ -349,6 +349,47 @@ describe('Test type tags', () => {
             age?: number;
         }
 
+        const PersonValidator = validate<Person>($schema<Person>());
+
+        expect(PersonValidator({ name: 'Francisco' })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10} })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: 1 })).toBe(true);
+
+
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 150, public: true} })).toBe(false);
+
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: -1 })).toBe(false);
+    });
+    
+    test('Custom validator', () => {
+        type Company = {
+            name: string;
+            /**
+             * @between 10-20
+            */
+            employees: number;
+
+            public?: boolean;
+        }
+        type Person = {
+            name: string;
+            // age?: number;
+            company?: Company;
+
+            /**
+             * @min 0
+             */
+            age?: number;
+        }
+
+        const validate = createCustomValidate({number: {
+            between: (value: number, tag: string):boolean => {
+                const range = tag.split('-').map(val => parseInt(val));
+
+                range.push(value);
+                return range.sort((a, b) => a - b)[1] === value;
+            }
+        }})
         const PersonValidator = validate<Person>($schema<Person>());
 
         expect(PersonValidator({ name: 'Francisco' })).toBe(true);

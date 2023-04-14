@@ -1,4 +1,4 @@
-import { createValidatorFor } from "./common";
+import { Tags, createValidatorFor } from "./common";
 
 const isNumber = (x: any): x is number => typeof x === "number";
 
@@ -41,3 +41,5 @@ const TAGS = {
 };
 
 export const validateNumber = createValidatorFor(isNumber, TAGS);
+
+export const customNumberValidator = (tags: Tags) => createValidatorFor<number>(isNumber, {...TAGS, ...tags});
