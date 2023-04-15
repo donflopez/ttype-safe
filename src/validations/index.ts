@@ -2,7 +2,7 @@ import { validateBoolean } from "./boolean";
 import { customNumberValidator, validateNumber } from "./number";
 import { customStringValidator, validateString } from "./string";
 
-type Validators =  { [type: string]: (value: any, tags: string[][]) => boolean };
+type Validators =  { [type: string]: (value: any, tags: string[][], throwError?: boolean) => boolean };
 
 export const validators: Validators = {
     string: validateString,

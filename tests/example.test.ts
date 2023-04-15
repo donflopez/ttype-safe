@@ -401,4 +401,45 @@ describe('Test type tags', () => {
 
         expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: -1 })).toBe(false);
     });
+    
+    test('Custom validator that throws', () => {
+        type Company = {
+            name: string;
+            /**
+             * @between 10-20
+            */
+            employees: number;
+
+            public?: boolean;
+        }
+        type Person = {
+            name: string;
+            // age?: number;
+            company?: Company;
+
+            /**
+             * @min 0
+             */
+            age?: number;
+        }
+
+        const validate = createCustomValidate({number: {
+            between: (value: number, tag: string):boolean => {
+                const range = tag.split('-').map(val => parseInt(val));
+
+                range.push(value);
+                return range.sort((a, b) => a - b)[1] === value;
+            }
+        }}, true)
+        const PersonValidator = validate<Person>($schema<Person>());
+
+        expect(PersonValidator({ name: 'Francisco' })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10} })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: 1 })).toBe(true);
+
+
+        expect(() => PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 150, public: true} })).toThrowError(new Error(`ValidationError: Tag validation [between] and comment [10-20] didn't succeed for value [150]`));
+
+        expect(() => PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 15, public: true} , age: -1},)).toThrowError(new Error(`ValidationError: Tag validation [min] and comment [0] didn't succeed for value [-1]`));
+    });
 });

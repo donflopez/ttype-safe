@@ -27,8 +27,14 @@ const getAllRequiredKeys = (json: JsonSchema) => {
 export const createCustomValidate = (tags?: {
     string?: TagValidator<string>,
     number?: TagValidator<number>,
-}) => {
+}, throwError?: boolean) => {
     const validators = updateValidators(tags);
+
+    const optionalThrow = (message: string) => {
+        if (throwError) {
+            throw new Error("ValidationError: " + message);
+        }
+    };
 
     const validateUnion = (json: Array<JsonType>, input: any) => {
         const valid = true;
@@ -51,6 +57,7 @@ export const createCustomValidate = (tags?: {
     
     const validateArray = (json: Array<JsonType>, input: any) => {
         if (!Array.isArray(input)) {
+            optionalThrow(`Expected an array and got [${typeof input}]`);
             return false;
         }
     
@@ -82,6 +89,7 @@ export const createCustomValidate = (tags?: {
     
         for (const key of requiredKeys) {
             if (!input.hasOwnProperty(key)) {
+                optionalThrow(`Object doesn't have expected property [${key}], it has the following keys - ${Object.keys(input)}`);
                 return false;
             }
         }
@@ -119,6 +127,7 @@ export const createCustomValidate = (tags?: {
     
         if (literal) {
             if (input !== children) {
+                optionalThrow(`Literal type missmatch, expected one of [${children}] but got [${input}]`);
                 return false;
             }
             return true;
@@ -129,7 +138,7 @@ export const createCustomValidate = (tags?: {
                 return true;
             }
     
-            if (!validators[type](input, tags)) {
+            if (!validators[type](input, tags, throwError)) {
                 return false;
             }
             return true;
@@ -166,6 +175,5 @@ export const createCustomValidate = (tags?: {
 
     return validate;
 };
-
 
 export const validate = createCustomValidate();
