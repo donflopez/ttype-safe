@@ -109,5 +109,23 @@ describe('Test string tags', () => {
         expect(TestEmailValidator({ email: 'this\\ still\\"not\\\\allowed@example.com' })).toBe(false);
         expect(TestEmailValidator({ email: 'i_like_underscore@but_its_not_allowed_in_this_part.example.com' })).toBe(false);
         expect(TestEmailValidator({ email: 'QA[icon]CHOCOLATE[icon]@test.com' })).toBe(false);
+    });
+
+    test('notempty', () => {
+        type TestNotempty = {
+            /**
+             * @notempty
+             */
+            text: string;
+        }
+
+        const TestNotemptyValidator = validate<TestNotempty>($schema<TestNotempty>());
+
+        expect(TestNotemptyValidator({ text: "a" })).toBe(true);
+        expect(TestNotemptyValidator({ text: "123" })).toBe(true);
+        expect(TestNotemptyValidator({ text: "~!+_*" })).toBe(true);
+        expect(TestNotemptyValidator({ text: " " })).toBe(true);
+
+        expect(TestNotemptyValidator({ text: "" })).toBe(false);
     })
 })
