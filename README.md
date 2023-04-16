@@ -209,6 +209,34 @@ CarValidator({ plate: "1ABC123" }); // good
 CarValidator({ plate: "1ABC1234" }); // bad
 ```
 
+#### 5. Email
+```ts
+type Person {
+  /**
+   * @email
+   */
+  email: string;
+}
+
+const EmailValidator = validate<Person>($schema<Person>());
+EmailValidator({ email: "John1988@gmail.com" }); // good
+EmailValidator({ email: "myEmail" }); // bad
+```
+
+#### 6. Notempty
+```ts
+type Person {
+  /**
+   * @notempty
+   */
+  firstName: string;
+}
+
+const NotemptyValidator = validate<Person>($schema<Person>());
+NotemptyValidator({ firstName: "John" }); // good
+NotemptyValidator({ firstName: "" }); // bad
+```
+
 ## Numbers
 
 ### Tags:

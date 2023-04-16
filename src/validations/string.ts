@@ -101,8 +101,26 @@ const TAGS = {
         const emailRegExp = new RegExp(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/);
         return emailRegExp.test(value);
     },
+
+    /**
+     * Test if the string is not empty
+     *
+     * @example
+     * ```ts
+     * type Person = {
+     * /**
+     * * @notempty
+     * *\/
+     * name: string;
+     * }
+     * ```
+     *
+     * @param value
+     * @returns
+     */
+    notempty: (value: string) => value !== "",
 };
 
 export const validateString = createValidatorFor(isString, TAGS);
 
-export const customStringValidator = (tags: Tags) => createValidatorFor<string>(isString, {...TAGS, ...tags});
+export const customStringValidator = (tags: Tags) => createValidatorFor<string>(isString, { ...TAGS, ...tags });
