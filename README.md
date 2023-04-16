@@ -76,7 +76,18 @@ const validate = createCustomValidate({
     }
   }
 });
+
+type Person = {
+  /**
+   * @date
+   */
+  birthday: string;
+};
+
 const PersonValidator = validate<Person>($schema<Person>());
+
+PersonValidator({ birthday: "2021-01-01" }); // good
+PersonValidator({ birthday: "2021-01-01T00:00:00" }); // bad
 ```
 
 ## Using it with jest
