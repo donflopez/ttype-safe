@@ -62,6 +62,23 @@ type Person = {
 export const PersonValidator = validate<Person>($schema<Person>());
 ```
 
+Your compiled code will replace `$schema` with the generated validation rules extracted from your TypeScript types and TsDoc comments. The `validate` function will create a validator function that will validate the data structure at runtime.
+
+## Adding custom tags
+
+You can create custom tags for primitive types, like @max or @regex but. In the following example we're going to create a tag for dates:
+
+```ts
+const validate = createCustomValidate({
+  string: {
+    date: (value: string): boolean => {
+      return new RegExp(/^\d{4}-\d{2}-\d{2}$/).test(value);
+    }
+  }
+});
+const PersonValidator = validate<Person>($schema<Person>());
+```
+
 ## Using it with jest
 
 > Note: This is only supported with ts-jest v29 or higher.
@@ -88,7 +105,7 @@ To use Type-Safe with jest, you need to add the following to your `jest.config.j
 
 ## Example using TypeSafe
 ```ts
-import { $schema, validate } from "ttype-safe/validate";
+import { $schema, validate } from "ttype-safe/validation";
 
 // Define your TypeScript types with custom validation rules using JSDoc comments
 type Person = {
