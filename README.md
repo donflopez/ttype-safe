@@ -182,7 +182,7 @@ console.log(PersonValidator(invalidPerson)); // bad
 ### Tags:
 #### 1. Regex
 ```ts
-type Car {
+type Car = {
   /**
    * @regex /\d[A-Z]{3}\d{3}/
    */
@@ -195,7 +195,7 @@ CarValidator({ plate: "1ABC12" }); // bad
 
 #### 2. Alphanumeric
 ```ts
-type Car {
+type Car = {
   /**
    * @alphanumeric
    */
@@ -208,7 +208,7 @@ CarValidator({ plate: "1ABC12#" }); // bad
 
 #### 3. Min
 ```ts
-type Car {
+type Car = {
   /**
    * @min 3
    */
@@ -221,7 +221,7 @@ CarValidator({ plate: "1A" }); // bad
 
 #### 4. Max
 ```ts
-type Car {
+type Car = {
   /**
    * @max 3
    */
@@ -235,7 +235,7 @@ CarValidator({ plate: "1ABC1234" }); // bad
 
 #### 5. Email
 ```ts
-type Person {
+type Person = {
   /**
    * @email
    */
@@ -249,7 +249,7 @@ EmailValidator({ email: "myEmail" }); // bad
 
 #### 6. Notempty
 ```ts
-type Person {
+type Person = {
   /**
    * @notempty
    */
@@ -266,7 +266,7 @@ NotemptyValidator({ firstName: "" }); // bad
 ### Tags:
 #### 1. Min
 ```ts
-type Human {
+type Human = {
   /**
    * @min 0
    */
@@ -280,7 +280,7 @@ HumanValidator({ age: -1 }); // bad
 
 #### 2. Max
 ```ts
-type Human {
+type Human = {
   /**
    * @max 100
    */
@@ -306,7 +306,7 @@ const AgeValidator = validate<Age>($schema<Age>());
 ```
 - BigInt is not supported and tags will be ignored:
 ```ts
-type Human {
+type Human = {
   /**
    * @min 0
    */
@@ -318,7 +318,7 @@ const HumanValidator = validate<Human>($schema<Human>());
 
 - Symbol is not supported and tags will be ignored:
 ```ts
-type Human {
+type Human = {
   /**
    * @min 0
    */
@@ -329,7 +329,7 @@ const HumanValidator = validate<Human>($schema<Human>());
 ```
 - Functions are not supported and will probably never be supported;
 ```ts
-type Human {
+type Human = {
   /**
    * @min 0
    */
