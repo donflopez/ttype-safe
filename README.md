@@ -90,6 +90,30 @@ PersonValidator({ birthday: "2021-01-01" }); // good
 PersonValidator({ birthday: "2021-01-01T00:00:00" }); // bad
 ```
 
+## Throwing automated errors
+
+```ts
+const validate = createCustomValidate({
+  string: {
+    date: (value: string): boolean => {
+      return new RegExp(/^\d{4}-\d{2}-\d{2}$/).test(value);
+    }
+  }
+}, true); // Pass true to throw instead of returning false
+
+type Person = {
+  /**
+   * @date
+   */
+  birthday: string;
+};
+
+const PersonValidator = validate<Person>($schema<Person>());
+
+PersonValidator({ birthday: "2021-01-01" }); // good
+PersonValidator({ birthday: "2021-01-01T00:00:00" }); // Throws -> ValidationError: Tag validation [date] and comment [null] didn't succeed for value [2021-01-01T00:00:00]
+```
+
 ## Using it with jest
 
 > Note: This is only supported with ts-jest v29 or higher.
