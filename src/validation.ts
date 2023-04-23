@@ -52,6 +52,7 @@ export const createCustomValidate = (tags?: {
             }
         }
     
+        optionalThrow(`Literal type mismatch, expected one of [${json.map(s => s.children)}] but got [${input}]`);
         return false;
     };
     
@@ -127,7 +128,6 @@ export const createCustomValidate = (tags?: {
     
         if (literal) {
             if (input !== children) {
-                optionalThrow(`Literal type missmatch, expected one of [${children}] but got [${input}]`);
                 return false;
             }
             return true;

@@ -322,9 +322,36 @@ describe('Test type tags', () => {
         // Valid
         expect(JobValidator({ role: Role.Admin, company: 'Amazon', level: 'L4' })).toBe(true);
         expect(JobValidator({ role: 0, company: 'Amazon', level: 'L5' })).toBe(true);
+        expect(JobValidator({ role: Role.Manager, company: 'Amazon', level: 'L5' })).toBe(true);
 
         // Not valid
         expect(JobValidator({ role: 'some' as any, company: 'Amazon', level: 'L5' })).toBe(false);
+    });
+
+    test('Enums with throw', () => {
+        enum Role {
+            Admin,
+            Manager,
+        }
+
+        type Job = {
+            role: Role;
+            company: string;
+            level: 'L4' | 'L5';
+        }
+
+        const validate = createCustomValidate({}, true);
+
+        const JobValidator = validate<Job>($schema<Job>());
+
+        // Valid
+        expect(JobValidator({ role: Role.Admin, company: 'Amazon', level: 'L4' })).toBe(true);
+        expect(JobValidator({ role: 0, company: 'Amazon', level: 'L5' })).toBe(true);
+        expect(JobValidator({ role: Role.Manager, company: 'Amazon', level: 'L5' })).toBe(true);
+
+        // Not valid
+        expect(() => JobValidator({ role: 'some' as any, company: 'Amazon', level: 'L5' })).toThrow('ValidationError: Literal type mismatch, expected one of [0,1] but got [some]');
+        expect(() => JobValidator({ role: Role.Admin, company: 'Amazon', level: 'L7' as 'L5' })).toThrow('ValidationError: Literal type mismatch, expected one of [L4,L5] but got [L7]');
     });
 
     test('Optional property', () => {
