@@ -1,5 +1,51 @@
-# ttype-Safe
+# ttype-Safe (TTS)
 TypeSafe is a TypeScript library that generates runtime validation rules from your code's TypeScript types. It analyzes your type definitions at build time and creates validators for validating data structures at runtime, ensuring they conform to expected types. You can add custom rules to types using JSDoc comments with tags like @regex and @max. It's easy to integrate with your TypeScript workflow and supports complex nested types like arrays and tuples. It helps create more reliable applications with less effort and fewer errors.
+
+## How does it compares with others
+
+### Zod
+
+Zod the lead of this type of tools, while in spirit both ttype-safe and zod aim for the goal the approaches are radically different. Zod exposes a series of methods that
+allows you to build validators and extract the types from these. TTS aims to offer the native TS experience when building types and with the support of jsdocs allow you to use validation rules with minimal effort.
+
+A zod example:
+
+```ts
+const User = z.object({
+  username: z.string().min(3).max(10),
+});
+
+User.parse({username: 'no'}) // throws
+User.parse({username: 'valid'}) // passes
+
+// To get and use the type you need to.
+type User = z.infer<typeof User>;
+```
+
+A TTS example:
+```ts
+type User = {
+  /**
+   * Name of the user to use in the application. This has to be unique and cannot be changed once saved.
+   *
+   * @min 3
+   * @max 10
+   */
+  username: string
+}
+
+const ƒUser = validate<User>($schema<User>());
+
+ƒUser({username: 'no'}) // false
+ƒUser({username: 'valid'}) // true
+```
+
+TTS has several advantages:
+- You keep the native type experience, so you don't need to learn how to create types with Zod and you get typechecking out of the box without using comments, all type validators that you create will check primitives like number, string, boolean.
+- Working with generics and complex types just works, again you don't need to learn how to work with generics.
+- Comment tags that add validation rules can be customized and reused, you don't need to import them. You just need to pass your custom validator.
+- **This is the most important one**, you can comment your types and generate automatic documentation with ts docs. I'm working on a plugin that will include a tag definition as validation rules so
+documentation of your rules is for free.
 
 # Getting Started
 
