@@ -1,6 +1,8 @@
 # ttype-Safe (TTS)
 TypeSafe is a TypeScript library that generates runtime validation rules from your code's TypeScript types. It analyzes your type definitions at build time and creates validators for validating data structures at runtime, ensuring they conform to expected types. You can add custom rules to types using JSDoc comments with tags like @regex and @max. It's easy to integrate with your TypeScript workflow and supports complex nested types like arrays and tuples. It helps create more reliable applications with less effort and fewer errors.
 
+> **WARNING:** This library is under heavy development, many features are still missing and the API will change as I explore what is the most developer friendly way to secure your types. You should expect changes in the main apis and tags used to add validation rules.
+
 ## How does it compares with others
 
 ### Zod
