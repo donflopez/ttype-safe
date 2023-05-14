@@ -457,7 +457,8 @@ describe('Test type tags', () => {
                 range.push(value);
                 return range.sort((a, b) => a - b)[1] === value;
             }
-        }}, true)
+        }}, true);
+
         const PersonValidator = validate<Person>($schema<Person>());
 
         expect(PersonValidator({ name: 'Francisco' })).toBe(true);
@@ -468,5 +469,49 @@ describe('Test type tags', () => {
         expect(() => PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 150, public: true} })).toThrowError(new Error(`ValidationError: Tag validation [between] and comment [10-20] didn't succeed for value [150]`));
 
         expect(() => PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 15, public: true} , age: -1},)).toThrowError(new Error(`ValidationError: Tag validation [min] and comment [0] didn't succeed for value [-1]`));
+    });
+
+    test('Expect array to fail when type changes', () => {
+        type Post = {
+            keywords: string[],
+            title: string,
+            content: string
+        };
+
+        const validate = createCustomValidate({}, true);
+        const PostValidator = validate<Post>($schema<Post>());
+
+        expect(PostValidator({keywords: ['a', 'b', 'c'], title: 'Awesome library', content: 'This should be included in TS by default'})).toBe(true);
+        expect(() => PostValidator({keywords: ['a', 'b', 'c', ['d']] as string[], title: 'Awesome library', content: 'This should be included in TS by default'})).toThrowError();
+        expect(() => PostValidator({keywords: ['a', 'b', 'c', ['d', {some: 'v'}]] as string[], title: 'Awesome library', content: 'This should be included in TS by default'})).toThrow(new Error('ValidationError: Value [d,[object Object]] is not of type [string].'));
+    });
+
+    test('Error description tag', () => {
+        type Person = {
+            /**
+             * @regex /[a-z]{9}/
+             * @error The id should be a string of length 9 and include only lower
+             * case characters. Ex abcdefghi. You provided [value]
+             */
+            id: string;
+
+            /**
+             * @max 150
+             * @min 0
+             * @error {
+             *   "max": "No human on earth has reached beyond 150 years old and you provided [value].",
+             *   "min": "A person cannot be less than 0 years old yet."
+             * }
+             */
+            age: number;
+            height: number;
+        };
+
+        const validate = createCustomValidate({}, true);
+        const PersonValidator = validate<Person>($schema<Person>());
+
+        expect(() => PersonValidator({id: '1312d', age: 21, height: 186})).toThrowError(new Error(`ValidationError on tag [regex] with error message: \nThe id should be a string of length 9 and include only lower case characters. Ex abcdefghi. You provided [1312d]`));
+        expect(() => PersonValidator({id: 'abcdefghi', age: 289, height: 186})).toThrowError(new Error(`ValidationError on tag [max] with error message: \nNo human on earth has reached beyond 150 years old and you provided [289].`));
+        expect(() => PersonValidator({id: 'abcdefghi', age: -1, height: 186})).toThrowError(new Error(`ValidationError on tag [min] with error message: \nA person cannot be less than 0 years old yet.`));
     });
 });

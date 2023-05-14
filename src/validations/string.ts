@@ -121,6 +121,6 @@ const TAGS = {
     notempty: (value: string) => value !== "",
 };
 
-export const validateString = createValidatorFor(isString, TAGS);
+export const validateString = createValidatorFor("string", isString, TAGS);
 
-export const customStringValidator = (tags: Tags) => createValidatorFor<string>(isString, { ...TAGS, ...tags });
+export const customStringValidator = (tags: Tags) => createValidatorFor<string>("string", isString, { ...TAGS, ...tags });

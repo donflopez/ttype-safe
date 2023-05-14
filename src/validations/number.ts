@@ -40,6 +40,6 @@ const TAGS = {
     min: (value: number, min: string) => value >= parseInt(min),
 };
 
-export const validateNumber = createValidatorFor(isNumber, TAGS);
+export const validateNumber = createValidatorFor("number", isNumber, TAGS);
 
-export const customNumberValidator = (tags: Tags) => createValidatorFor<number>(isNumber, {...TAGS, ...tags});
+export const customNumberValidator = (tags: Tags) => createValidatorFor<number>("number", isNumber, {...TAGS, ...tags});
