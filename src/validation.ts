@@ -167,10 +167,12 @@ export const createCustomValidate = (tags?: {
         return true;
     };
     
-    const validate = <T>(json: string) => (input: T) => {
+    const validate = <T>(json: string) => {
         const obj = JSON.parse(json) as JsonType;
-    
-        return validateJsonType(obj, input);
+
+        return (input: T) => {
+            return validateJsonType(obj, input);
+        };
     };
 
     return validate;
