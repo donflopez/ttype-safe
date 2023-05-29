@@ -51,6 +51,8 @@ documentation of your rules is for free.
 
 # Getting Started
 
+[You can find a working example project here](https://github.com/donflopez/ttype-safe-example-project)
+
 ## Importing ttype-safe
 
 ```package.json
