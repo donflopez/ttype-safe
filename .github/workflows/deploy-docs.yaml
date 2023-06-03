@@ -1,4 +1,4 @@
-name: Tests CI
+name: Docs Site
 
 on: [push]
 
