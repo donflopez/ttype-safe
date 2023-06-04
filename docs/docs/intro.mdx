@@ -150,7 +150,7 @@ console.log(UserValidator({email: 'email@gmail.com', password: "12345"})); // lo
 Now our email is properly validated! Password is still not great, I'm not going to get into a full password validation regex because I want to show other native tags, let's at least restrict the min length of the string.
 
 
-```ts title="lib/input.ts" {4-7,14-15}
+```ts title="lib/input.ts" {10-12,18-19}
 import { $schema, validate } from 'ttype-safe/validate';
 
 type User = {
