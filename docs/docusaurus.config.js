@@ -10,8 +10,8 @@ const projectName = "ttype-safe";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-    title: "My Site",
-    tagline: "Dinosaurs are cool",
+    title: "ttype-safe",
+    tagline: "Full type validation from native typescript types and jsDocs",
     favicon: "img/favicon.ico",
 
     // Set the production url of your site here

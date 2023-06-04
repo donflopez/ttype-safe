@@ -1,0 +1,180 @@
+---
+sidebar_position: 1
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+
+# Tutorial Intro
+
+Let's discover **ttype-safe in less than 5 minutes**.
+
+## Getting Started
+
+### Installing Dependencies
+
+:::info
+**ttype-safe** works thanks to typescript transformers. Typescript doesn't support the transformer injection directly from `tsc` so we need an
+alternative to inject our transformers. For that, we can use tools like `ttypescript` and `ts-patch`. We officially support the former and the later
+is a work in progress, but it may work by default so feel free to try it out!
+:::
+
+<Tabs>
+<TabItem value="yrn" label="yarn">
+
+```bash
+yarn install ttype-safe ttypescript
+```
+
+</TabItem>
+<TabItem value="npm" label="npm">
+
+```bash
+npm i --save-dev ttype-safe ttypescript
+```
+
+</TabItem>
+</Tabs>
+
+### Configuring your project
+
+We need to inject ttype-safe as part of the typescript transpilation process. As said in the previous section you can do that with
+some tools like `ttypescript` or `ts-patch`. Here, we'll be using `ttypescript`.
+
+First we change the build process, as of now, you might have run `tsc` as part of your build. We'll replace `tsc` by `ttsc` from `ttypescript`.
+
+```json title="package.json"
+"scripts": {
+  "build": "ttsc"
+}
+```
+
+Second we need to change the `tsconfig.json` file to add ttype-safe transformer, this will inject our transformer in the typescript transpilation pipeline.
+
+```json title="tsconfig.json" {3-5}
+{
+  "compilerOptions": {
+    "plugins": [{
+      "transform": "ttype-safe"
+    }]
+  }
+}
+```
+
+Now your project is able to generate type validators from your TS types!
+
+## Validating your first type
+
+Let's go to any type you may have in your project that you want to validate:
+
+```ts title="lib/input.ts"
+type User = {
+  email: string;
+  password: string;
+}
+
+```
+
+### Creating the first type validator
+
+First we import `$schema` and `validate` functions.
+- **$schema**: Is used as a placeholder that our transformer will replace later with the validation instructions
+- **validate**: This function will receive the transpiled schema return a function that will run validations against it.
+
+```ts title="lib/input.ts" {1,8}
+import { $schema, validate } from 'ttype-safe/validate';
+
+type User = {
+  email: string;
+  password: string;
+};
+
+const UserValidator = validate<User>($schema<User>());
+```
+
+This will transpile to something like:
+
+```ts title="lib/input.ts"
+const UserValidator = validate("{... json with validation rules ...}");
+```
+
+
+## Using Validators
+
+Now that you have created your first validator, you can use it. Validators by default only return `true` or `false` if the validation
+passes or not. This is not extremely useful and it may change in the near future. You have an alternative option to make validators throw an error by default with
+a description on where the validation failed.
+
+```ts title="lib/input.ts" {10,11}
+import { $schema, validate } from 'ttype-safe/validate';
+
+type User = {
+  email: string;
+  password: string;
+};
+
+const UserValidator = validate<User>($schema<User>());
+
+console.log(UserValidator({email: 'email', password: "12345"})); // logs true
+console.log(UserValidator({email: 'email', password: 12345 as any})); // logs false
+```
+
+:::info
+Every validator will expect to get the typescript it was created with, that's why all validate functions expect the type you want to validate as a generic input. Ex: `validate<MyType>()` this returns a validator function of type `type ValidatorFn = (input: MyType) => boolean;`
+:::
+
+## Improving your type validators with validation tags
+
+This is already useful, isn't it? You can validate that the input to your types are of type string, number or others. But you will still need to validate that the email property of the object is an actual email with some regex or other mechanisms. Same if you want to be good and ensure your users have safe passwords.
+
+We can use jsDoc tags to enhance our validators pretty easily, let's start verifying that the email is an actual email.
+
+```ts title="lib/input.ts" {4-7,14-15}
+import { $schema, validate } from 'ttype-safe/validate';
+
+type User = {
+  /**
+   * Got the regex from https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression
+   * @regex /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+   */
+  email: string;
+  password: string;
+};
+
+const UserValidator = validate<User>($schema<User>());
+
+console.log(UserValidator({email: 'email', password: "12345"})); // logs false
+console.log(UserValidator({email: 'email@gmail.com', password: "12345"})); // logs true
+```
+
+Now our email is properly validated! Password is still not great, I'm not going to get into a full password validation regex because I want to show other native tags, let's at least restrict the min length of the string.
+
+
+```ts title="lib/input.ts" {4-7,14-15}
+import { $schema, validate } from 'ttype-safe/validate';
+
+type User = {
+  /**
+   * Got the regex from https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression
+   * @regex /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+   */
+  email: string;
+
+  /**
+   * @min 8
+   */
+  password: string;
+};
+
+const UserValidator = validate<User>($schema<User>());
+
+console.log(UserValidator({email: 'email@gmail.com', password: "12345"})); // logs false
+console.log(UserValidator({email: 'email@gmail.com', password: "12345678"})); // logs true
+```
+
+Now at least the user needs to have a password with a min of 8 chars!
+
+## What is next?
+- Custom Tags: Create your own tags that you commonly use across your code base like @email, @password or any common validations you need.
+- Custom Errors: Allows you to throw custom error messages per property or even per validation tag!
+- Vending validators and tags: If you're working on a lib and are using ttype-safe. Your users will get the validation for free in their types if you don't use custom tags. If you do, they can import your tags to make them work!
