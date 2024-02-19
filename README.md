@@ -53,18 +53,23 @@ documentation of your rules is for free.
 
 [You can find a working example project here](https://github.com/donflopez/ttype-safe-example-project)
 
-## Importing ttype-safe
+## Importing ttype-safe and ts-patch
 
 ```package.json
 "devDependencies": {
-  "ttypescript": "^1.5.12",
+  "ts-patch": "3.1.2",
   "ttype-safe": "^0.6.0"
 },
+"scripts": {
+  ...
+  "prepare": "ts-patch install -s",
+  ...
+}
 ```
 
-## Configuring [ttypescript]()
+## Configuring [ts-patch](https://github.com/nonara/ts-patch)
 
-To use Type-Safe with [ttypescript](), you need to add the following to your `tsconfig.json` file:
+To use tType-Safe with [ts-patch](https://github.com/nonara/ts-patch), you need to add the following to your `tsconfig.json` file:
 
 ```json
 {
