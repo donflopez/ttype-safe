@@ -354,6 +354,17 @@ describe('Test type tags', () => {
         expect(() => JobValidator({ role: Role.Admin, company: 'Amazon', level: 'L7' as 'L5' })).toThrow('ValidationError: Literal type mismatch, expected one of [L4,L5] but got [L7]');
     });
 
+    test('Custom validator that throws with literal', () => {
+        type Person = {
+            schemaVersion: 1;
+            name: string;
+        };
+
+        const PersonValidator = createCustomValidate({}, true)<Person>($schema<Person>());
+
+        expect(() => PersonValidator({ schemaVersion: 'string' as unknown as 1, name: 'Francisco' })).toThrow('ValidationError: Literal type mismatch, expected one of [1] but got [string]');
+    });
+
     test('Optional property', () => {
         type Company = {
             name: string;
@@ -513,5 +524,27 @@ describe('Test type tags', () => {
         expect(() => PersonValidator({id: '1312d', age: 21, height: 186})).toThrowError(new Error(`ValidationError on tag [regex] with error message: \nThe id should be a string of length 9 and include only lower case characters. Ex abcdefghi. You provided [1312d]`));
         expect(() => PersonValidator({id: 'abcdefghi', age: 289, height: 186})).toThrowError(new Error(`ValidationError on tag [max] with error message: \nNo human on earth has reached beyond 150 years old and you provided [289].`));
         expect(() => PersonValidator({id: 'abcdefghi', age: -1, height: 186})).toThrowError(new Error(`ValidationError on tag [min] with error message: \nA person cannot be less than 0 years old yet.`));
+    });
+    
+    test('Error description tag for custom tags', () => {
+        type Person = {
+            /**
+             * @just9
+             * @error {
+             *  "just9": "Just 9 characters!!!! You provided [value]"
+             * }
+             */
+            id: number;
+        };
+
+        const validate = createCustomValidate({ 
+            number: {
+                just9: (value: number) => value === 9
+            }
+        }, true);
+
+        const PersonValidator = validate<Person>($schema<Person>());
+
+        expect(() => PersonValidator({id: 8 })).toThrowError(new Error(`ValidationError on tag [just9] with error message: \nJust 9 characters!!!! You provided [8]`));
     });
 });

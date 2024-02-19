@@ -128,6 +128,8 @@ export const createCustomValidate = (tags?: {
     
         if (literal) {
             if (input !== children) {
+                optionalThrow(`Literal type mismatch, expected one of [${json.children}] but got [${input}]`);
+
                 return false;
             }
             return true;
