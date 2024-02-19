@@ -47,7 +47,7 @@ export const createCustomValidate = (tags?: {
                 continue;
             }
     
-            if (validateJsonType(schema, input)) {
+            if (validateJsonType(schema, input, true)) {
                 return true;
             }
         }
@@ -111,7 +111,7 @@ export const createCustomValidate = (tags?: {
         return true;
     };
     
-    const validateJsonType = (json: JsonType, input: any) => {
+    const validateJsonType = (json: JsonType, input: any, fromUnion = false) => {
         const { type, optional, union, tags, children, array, primitive, literal } = json;
     
         if (optional && (input === undefined || input === null)) {
@@ -119,7 +119,7 @@ export const createCustomValidate = (tags?: {
         }
     
         if (optional && children && children.length) {
-            if (!validateJsonType(children[0], input)) {
+            if (!validateJsonType(children[0], input, fromUnion)) {
                 return false;
             }
     
@@ -128,8 +128,10 @@ export const createCustomValidate = (tags?: {
     
         if (literal) {
             if (input !== children) {
-                optionalThrow(`Literal type mismatch, expected one of [${json.children}] but got [${input}]`);
-
+                if (!fromUnion) {
+                    optionalThrow(`Literal type mismatch, expected one of [${json.children}] but got [${input}]`);
+                }
+                
                 return false;
             }
             return true;

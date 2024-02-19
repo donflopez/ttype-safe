@@ -365,6 +365,16 @@ describe('Test type tags', () => {
         expect(() => PersonValidator({ schemaVersion: 'string' as unknown as 1, name: 'Francisco' })).toThrow('ValidationError: Literal type mismatch, expected one of [1] but got [string]');
     });
 
+    test('Person type literals', () => {
+        type Person = {
+            schemaVersion: 1;
+            name: string;
+        };
+
+        const PersonValidator = validate<Person>($schema<Person>());
+        expect(PersonValidator({ schemaVersion: 1, name: 'Francisco' })).toBe(true);
+    });
+
     test('Optional property', () => {
         type Company = {
             name: string;

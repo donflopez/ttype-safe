@@ -120,7 +120,8 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker, tags?: string[][]): 
     const symbol = type.getSymbol() || type.aliasSymbol;
     if (!symbol) {
         if (type.isLiteral()) {
-            return checker.typeToString(type).replaceAll("\"", "");
+            const typeName = checker.typeToString(type).replaceAll("\"", "");
+            return type.isNumberLiteral() ? JSON.parse(typeName) : typeName;
         }
 
         if (isPrimitiveType(type)) {
