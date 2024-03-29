@@ -557,4 +557,27 @@ describe('Test type tags', () => {
 
         expect(() => PersonValidator({id: 8 })).toThrowError(new Error(`ValidationError on tag [just9] with error message: \nJust 9 characters!!!! You provided [8]`));
     });
+
+    test('Fixing array type aliases', () => {
+        type Role = {
+            /**
+             * @regex /^[A-Za-z]\w{1,3}$/
+             */
+            name: string;
+        }
+
+        type Roles = Role[];
+
+        type Person = {
+            roles: Role[];
+            rolesAlias: Roles;
+        };
+
+        const validate = createCustomValidate({}, true);
+
+        const PersonValidator = validate<Person>($schema<Person>());
+
+        expect(PersonValidator({roles: [{name: 'foo'}], rolesAlias: [{name: 'bar'}]})).toBe(true);
+        expect( () => PersonValidator({roles: [{name: 'foo-2'}], rolesAlias: [{name: 'bar'}]})).toThrow();
+    });
 });

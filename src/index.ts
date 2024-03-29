@@ -135,6 +135,11 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker, tags?: string[][]): 
         return (type as any).resolvedTypeArguments.map((type: any) => buildType(type, checker));
     }
 
+    if (symbol.getName() === "Array" || checker.isArrayType(type)) {
+        // Handle arrays explicitly if not caught by the above type reference check
+        return (type as ts.TypeReference).typeArguments?.map((t) => buildType(t, checker));
+    }
+
     const properties = checker.getPropertiesOfType(type);
     const json: { [key: string]: any } = {};
 
@@ -150,7 +155,7 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker, tags?: string[][]): 
         const typeName = checker.typeToString(propType);
         const isOptional = prop.getFlags() & ts.SymbolFlags.Optional ? true : false;
         const isUnion = propType.getFlags() & ts.TypeFlags.Union ? true : false;
-        const isArray = isOfTypeArray(checker, propType);
+        const isArray = isOfTypeArray(checker, propType) || checker.isArrayType(propType);
         const isPrimitive = isPrimitiveType(propType) || typeName === "boolean";
         const isEnum = propType.getFlags() & ts.TypeFlags.EnumLike ? true : false;
 
@@ -169,7 +174,13 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker, tags?: string[][]): 
             json[propName].children = buildEnumType(propType, checker);
         }
         else if (!isPrimitive) {
-            json[propName].children = typeToJson(propType, checker, tags);
+            if (!isArray && checker.isArrayType(propType)) {
+                console.log("####", (propType as ts.TypeReference).typeArguments);
+
+                json[propName].children = typeToJson((propType as ts.TypeReference).typeArguments![0], checker, tags);
+            } else {
+                json[propName].children = typeToJson(propType, checker, tags);
+            }
         }
     }
 
