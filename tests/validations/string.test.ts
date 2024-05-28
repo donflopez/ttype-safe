@@ -111,6 +111,62 @@ describe('Test string tags', () => {
         expect(TestEmailValidator({ email: 'QA[icon]CHOCOLATE[icon]@test.com' })).toBe(false);
     });
 
+    test('union', () => {
+        type TestUnionEmail = {
+            /**
+             * @email
+             */
+            emailOrAlphanumeric: string;
+        }
+
+        type TestUnionAlphanumeric = {
+            /**
+             * @alphanumeric
+             */
+            emailOrAlphanumeric: string;
+        }
+
+        type TestUnion = TestUnionEmail | TestUnionAlphanumeric;
+
+        const TestEmailOrAlphanumericValidator = validate<TestUnion>($schema<TestUnion>());
+
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'simple@example.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'very.common@example.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'disposable.style.email.with+symbol@example.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'other.email-with-hyphen@example.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'fully-qualified-domain@example.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'user.name+tag+sorting@example.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'x@example.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'example-indeed@strange-example.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'test/test@test.com' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'admin@mailserver1' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'example@s.example' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'mailhost!username@example.org' })).toBe(true);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'user%example.com@example.org' })).toBe(true);
+
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'Abc.example.com' })).toBe(false);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'A@b@c@example.com' })).toBe(false);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'a"b(c)d,e:f;g<h>i[j\\k]l@example.com' })).toBe(false);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'just"not"right@example.com' })).toBe(false);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'this is"not\\allowed@example.com' })).toBe(false);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'this\\ still\\"not\\\\allowed@example.com' })).toBe(false);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'i_like_underscore@but_its_not_allowed_in_this_part.example.com' })).toBe(false);
+        expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'QA[icon]CHOCOLATE[icon]@test.com' })).toBe(false);
+
+         // ALPHANUMERIC TESTS
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'abc123' })).toBe(true);
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: 'ABC1234567890' })).toBe(true);
+
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '_' })).toBe(false);
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '*' })).toBe(false);
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '-' })).toBe(false);
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '/' })).toBe(false);
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '#' })).toBe(false);
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '@' })).toBe(false);
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '$' })).toBe(false);
+         expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '' })).toBe(false);
+    })
+
     test('notempty', () => {
         type TestNotempty = {
             /**
