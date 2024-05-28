@@ -66,6 +66,7 @@ const buildType = (type: ts.Type, checker: ts.TypeChecker, tags?: string[][]) =>
     }
     const isOptional = type.getFlags() & ts.TypeFlags.Undefined ? true : false;
     const isUnion = type.getFlags() & ts.TypeFlags.Union ? true : false;
+    const isIntersection = type.getFlags() & ts.TypeFlags.Intersection ? true : false;
     const isArray = isOfTypeArray(checker, type);
     const isPrimitive = isPrimitiveType(type);
     const isEnum = type.getFlags() & ts.TypeFlags.EnumLike ? true : false;
@@ -74,6 +75,7 @@ const buildType = (type: ts.Type, checker: ts.TypeChecker, tags?: string[][]) =>
         type: checker.typeToString(type),
         optional: isOptional,
         union: isUnion,
+        intersection: isIntersection,
         literal: type.isLiteral(),
         array: isArray,
         primitive: isPrimitive,
@@ -109,7 +111,7 @@ const buildEnumType = (type: ts.Type, checker: ts.TypeChecker) => {
 
 
 function typeToJson(type: ts.Type, checker: ts.TypeChecker, tags?: string[][]): any {
-    if (type.isUnion()) {
+    if (type.isUnion() || type.isIntersection()) {
         return type.types.map((t) => buildType(t, checker, tags)).filter(c => c.type !== "undefined");
     }
 
@@ -155,6 +157,7 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker, tags?: string[][]): 
         const typeName = checker.typeToString(propType);
         const isOptional = prop.getFlags() & ts.SymbolFlags.Optional ? true : false;
         const isUnion = propType.getFlags() & ts.TypeFlags.Union ? true : false;
+        const isIntersection = propType.getFlags() & ts.TypeFlags.Intersection ? true : false;
         const isArray = isOfTypeArray(checker, propType) || checker.isArrayType(propType);
         const isPrimitive = isPrimitiveType(propType) || typeName === "boolean";
         const isEnum = propType.getFlags() & ts.TypeFlags.EnumLike ? true : false;
@@ -163,6 +166,7 @@ function typeToJson(type: ts.Type, checker: ts.TypeChecker, tags?: string[][]): 
             type: typeName,
             optional: isOptional,
             union: isUnion,
+            intersection: isIntersection,
             literal: propType.isLiteral(),
             array: isArray,
             primitive: isPrimitive,

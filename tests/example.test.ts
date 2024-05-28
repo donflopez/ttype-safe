@@ -408,7 +408,7 @@ describe('Test type tags', () => {
 
         expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: -1 })).toBe(false);
     });
-    
+
     test('Custom validator', () => {
         type Company = {
             name: string;
@@ -449,7 +449,7 @@ describe('Test type tags', () => {
 
         expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: -1 })).toBe(false);
     });
-    
+
     test('Custom validator that throws', () => {
         type Company = {
             name: string;
@@ -535,7 +535,7 @@ describe('Test type tags', () => {
         expect(() => PersonValidator({id: 'abcdefghi', age: 289, height: 186})).toThrowError(new Error(`ValidationError on tag [max] with error message: \nNo human on earth has reached beyond 150 years old and you provided [289].`));
         expect(() => PersonValidator({id: 'abcdefghi', age: -1, height: 186})).toThrowError(new Error(`ValidationError on tag [min] with error message: \nA person cannot be less than 0 years old yet.`));
     });
-    
+
     test('Error description tag for custom tags', () => {
         type Person = {
             /**
@@ -547,7 +547,7 @@ describe('Test type tags', () => {
             id: number;
         };
 
-        const validate = createCustomValidate({ 
+        const validate = createCustomValidate({
             number: {
                 just9: (value: number) => value === 9
             }
