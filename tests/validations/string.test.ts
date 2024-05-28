@@ -126,22 +126,6 @@ describe('Test string tags', () => {
             emailOrAlphanumeric: string;
         }
 
-        // type TestUnionIntersection = TestUnionAlphanumeric & {
-        //   /**
-        //    * @min 1
-        //    * @max 5
-        //    */
-        //   other: string;
-        // }
-
-        // type TestUnionIntersection = TestUnionEmail & {
-        //   /**
-        //    * @min 1
-        //    * @max 5
-        //    */
-        //   other: string;
-        // }
-
         type TestUnionIntersection = (TestUnionEmail | TestUnionAlphanumeric) & {
             /**
              * @min 1
@@ -149,20 +133,6 @@ describe('Test string tags', () => {
              */
             other: string;
         };
-
-        //  type TestUnionIntersection = (TestUnionEmail & {
-        //     /**
-        //      * @min 1
-        //      * @max 5
-        //      */
-        //     other: string;
-        // }) | (TestUnionAlphanumeric & {
-        //     /**
-        //      * @min 1
-        //      * @max 5
-        //      */
-        //     other: string;
-        // });
 
         const TestUnionIntersectionValidator = validate<TestUnionIntersection>($schema<TestUnionIntersection>());
 
