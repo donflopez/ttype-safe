@@ -38,8 +38,6 @@ export const createCustomValidate = (tags?: {
     };
 
     const validateUnion = (json: Array<JsonType>, input: any) => {
-        console.log("VALIDATING UNION: ", json);
-
         const valid = true;
         if (json.includes(input)) {
             return valid;
@@ -51,14 +49,10 @@ export const createCustomValidate = (tags?: {
             }
 
             if (validateJsonType(schema, input, true)) {
-                console.log("it ok", schema);
                 return true;
             }
 
-            console.log("false!");
         }
-
-        console.log("BOUTTA THROW: ", json);
 
         optionalThrow(`Literal type mismatch, expected one of [${json.map(s => s.children)}] but got [${input}]`);
         return false;
@@ -154,7 +148,6 @@ export const createCustomValidate = (tags?: {
         if (literal) {
             if (input !== children) {
                 if (!fromUnion) {
-                    console.log("THROW: ", json);
                     optionalThrow(`Literal type mismatch, expected one of [${json.children}] but got [${input}]`);
                 }
 
@@ -175,7 +168,6 @@ export const createCustomValidate = (tags?: {
         }
 
         if (array && children && children.length) {
-            console.log(json.type, "array");
             if (!validateArray(children as unknown as JsonType[], input)) {
                 return false;
             }
@@ -183,7 +175,6 @@ export const createCustomValidate = (tags?: {
         }
 
         if (intersection && children && children.length) {
-            console.log(json.type, "intersection");
             if (!validateIntersection(children as unknown as JsonType[], input)) {
                 return false;
             }
@@ -191,7 +182,6 @@ export const createCustomValidate = (tags?: {
         }
 
         if (union && children && children.length) {
-            console.log(json.type, "union");
             if (!validateUnion(children as unknown as JsonType[], input)) {
                 return false;
             }
@@ -199,7 +189,6 @@ export const createCustomValidate = (tags?: {
         }
 
         if (children && typeof children === "object" && !union && !intersection && !primitive && !array) {
-            console.log(json.type, "object");
             if (!validateObject(children as JsonSchema, input)) {
                 return false;
             }

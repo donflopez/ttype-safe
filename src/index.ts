@@ -71,7 +71,7 @@ const buildType = (type: ts.Type, checker: ts.TypeChecker, tags?: string[][]) =>
     const isPrimitive = isPrimitiveType(type);
     const isEnum = type.getFlags() & ts.TypeFlags.EnumLike ? true : false;
 
-    const j = {
+    return {
         type: checker.typeToString(type),
         optional: isOptional,
         union: isUnion,
@@ -83,7 +83,6 @@ const buildType = (type: ts.Type, checker: ts.TypeChecker, tags?: string[][]) =>
         tags: tags || [],
         children: isPrimitive ? undefined : typeToJson(type, checker),
     };
-    return j;
 };
 
 const buildEnumType = (type: ts.Type, checker: ts.TypeChecker) => {
