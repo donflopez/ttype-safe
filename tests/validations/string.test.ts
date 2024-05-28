@@ -111,6 +111,73 @@ describe('Test string tags', () => {
         expect(TestEmailValidator({ email: 'QA[icon]CHOCOLATE[icon]@test.com' })).toBe(false);
     });
 
+    test('union and intersection', () => {
+        type TestUnionEmail = {
+            /**
+             * @email
+             */
+            emailOrAlphanumeric: string;
+        }
+
+        type TestUnionAlphanumeric = {
+            /**
+             * @alphanumeric
+             */
+            emailOrAlphanumeric: string;
+        }
+
+        // type TestUnionIntersection = TestUnionAlphanumeric & {
+        //   /**
+        //    * @min 1
+        //    * @max 5
+        //    */
+        //   other: string;
+        // }
+
+        // type TestUnionIntersection = TestUnionEmail & {
+        //   /**
+        //    * @min 1
+        //    * @max 5
+        //    */
+        //   other: string;
+        // }
+
+        type TestUnionIntersection = (TestUnionEmail | TestUnionAlphanumeric) & {
+            /**
+             * @min 1
+             * @max 5
+             */
+            other: string;
+        };
+
+        //  type TestUnionIntersection = (TestUnionEmail & {
+        //     /**
+        //      * @min 1
+        //      * @max 5
+        //      */
+        //     other: string;
+        // }) | (TestUnionAlphanumeric & {
+        //     /**
+        //      * @min 1
+        //      * @max 5
+        //      */
+        //     other: string;
+        // });
+
+        const TestUnionIntersectionValidator = validate<TestUnionIntersection>($schema<TestUnionIntersection>());
+
+        expect(TestUnionIntersectionValidator({ emailOrAlphanumeric: 'simple@example.com', other: "str" })).toBe(true);
+        expect(TestUnionIntersectionValidator({ emailOrAlphanumeric: 'very.common@example.com', other: "FAILS_REALLY_LONG_STRING" })).toBe(false);
+        expect(TestUnionIntersectionValidator({ emailOrAlphanumeric: 'Abc.example.com', other: "str" })).toBe(false);
+        expect(TestUnionIntersectionValidator({ emailOrAlphanumeric: 'A@b@c@example.com', other: "FAILS_REALLY_LONG_STRING" })).toBe(false);
+
+        // ALPHANUMERIC TESTS
+        expect(TestUnionIntersectionValidator({ emailOrAlphanumeric: 'abc123', other: "str" })).toBe(true);
+        expect(TestUnionIntersectionValidator({ emailOrAlphanumeric: '_', other: "str" })).toBe(false);
+        expect(TestUnionIntersectionValidator({ emailOrAlphanumeric: 'abc123', other: "FAILS_REALLY_LONG_STRING" })).toBe(false);
+        expect(TestUnionIntersectionValidator({ emailOrAlphanumeric: '_', other: "FAILS_REALLY_LONG_STRING" })).toBe(false);
+    });
+
     test('union', () => {
         type TestUnionEmail = {
             /**
