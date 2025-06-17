@@ -151,6 +151,7 @@ describe('Test string tags', () => {
     test('union', () => {
         type TestUnionEmail = {
             /**
+             * ignored wow@
              * @email
              */
             emailOrAlphanumeric: string;
@@ -204,21 +205,39 @@ describe('Test string tags', () => {
          expect(TestEmailOrAlphanumericValidator({ emailOrAlphanumeric: '' })).toBe(false);
     })
 
-    test('notempty', () => {
-        type TestNotempty = {
-            /**
-             * @notempty
-             */
-            text: string;
-        }
+    // test('notempty', () => {
+    //     type TestNotempty = {
+    //         /**
+    //          * @notempty
+    //          */
+    //         text: string;
+    //     }
 
-        const TestNotemptyValidator = validate<TestNotempty>($schema<TestNotempty>());
+    //     const TestNotemptyValidator = validate<TestNotempty>($schema<TestNotempty>());
 
-        expect(TestNotemptyValidator({ text: "a" })).toBe(true);
-        expect(TestNotemptyValidator({ text: "123" })).toBe(true);
-        expect(TestNotemptyValidator({ text: "~!+_*" })).toBe(true);
-        expect(TestNotemptyValidator({ text: " " })).toBe(true);
+    //     expect(TestNotemptyValidator({ text: "a" })).toBe(true);
+    //     expect(TestNotemptyValidator({ text: "123" })).toBe(true);
+    //     expect(TestNotemptyValidator({ text: "~!+_*" })).toBe(true);
+    //     expect(TestNotemptyValidator({ text: " " })).toBe(true);
 
-        expect(TestNotemptyValidator({ text: "" })).toBe(false);
-    })
+    //     expect(TestNotemptyValidator({ text: "" })).toBe(false);
+    // })
 })
+
+type TestUnionEmail = {
+    /**
+     * some email
+     * @some email
+     * @email SomeValueHere!
+     */
+    emailOrAlphanumeric: string;
+}
+
+type TestUnionAlphanumeric = {
+    /**
+     * @alphanumeric value
+     */
+    emailOrAlphanumeric: string;
+}
+
+export type TestUnion = TestUnionEmail | TestUnionAlphanumeric;

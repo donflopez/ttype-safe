@@ -1,11 +1,11 @@
-import { Tags, createValidatorFor } from "./common";
+import { ValidatorStructure } from ".";
 
-const isString = (x: any): x is string => typeof x === "string";
+const isString = (x: unknown): x is string => typeof x === "string";
 
 const TAGS = {
     /**
      * Test the value of the string against the provided regex
-     * 
+     *
      * @example
      * ```ts
      * type Person = {
@@ -15,10 +15,10 @@ const TAGS = {
      *   name: string;
      * }
      * ```
-     * 
-     * @param value 
-     * @param regex 
-     * @returns 
+     *
+     * @param value
+     * @param regex
+     * @returns
      */
     regex: (value: string, regex: string) => {
         const re = new RegExp(regex.replaceAll("/", ""));
@@ -27,7 +27,7 @@ const TAGS = {
 
     /**
      * Test if the string is alphanumeric
-     * 
+     *
      * @example
      * ```ts
      * type Person = {
@@ -37,15 +37,15 @@ const TAGS = {
      * lastName: string;
      * }
      * ```
-     * 
+     *
      * @param value
-     * @returns 
+     * @returns
      */
     alphanumeric: (value: string) => TAGS.regex(value, "/^[a-zA-Z0-9]+$/"),
 
     /**
      * Test if the string is shorter than the provided length
-     * 
+     *
      * @example
      * ```ts
      * type Person = {
@@ -55,7 +55,7 @@ const TAGS = {
      * lastName: string;
      * }
      * ```
-     * 
+     *
      * @param value
      * @param length
      * @returns
@@ -64,7 +64,7 @@ const TAGS = {
 
     /**
      * Test if the string is larger than the provided length
-     * 
+     *
      * @example
      * ```ts
      * type Person = {
@@ -74,7 +74,7 @@ const TAGS = {
      * lastName: string;
      * }
      * ```
-     * 
+     *
      * @param value
      * @param length
      * @returns
@@ -121,6 +121,8 @@ const TAGS = {
     notempty: (value: string) => value !== "",
 };
 
-export const validateString = createValidatorFor("string", isString, TAGS);
-
-export const customStringValidator = (tags: Tags) => createValidatorFor<string>("string", isString, { ...TAGS, ...tags });
+export const STRING_VALIDATOR: ValidatorStructure<string> = {
+    name: "string",
+    is: isString,
+    tags: TAGS,
+} as const;

@@ -1,208 +1,116 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TagValidator, updateValidators } from "./validations";
-
-type JsonType = {
-    type: string;
-    optional: boolean;
-    union: boolean;
-    intersection: boolean;
-    literal: boolean;
-    array: boolean;
-    primitive: boolean;
-    tags: string[][];
-    children?: JsonSchema;
-}
-
-type JsonSchema = {
-    [prop: string]: JsonType
-}
+import { Options, Schema, SchemaContext, SchemaError, Validator, ValidatorResult } from "jsonschema";
+import { TagValidator, ValidatorStructure } from "./validations";
+import { STRING_VALIDATOR } from "./validations/string";
+import { NUMBER_VALIDATOR } from "./validations/number";
+import { handleCommentTag, handleNoCommentTag, TypedTags } from "./validations/common";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const $schema = <T>(): string => "";
 
-const getAllRequiredKeys = (json: JsonSchema) => {
-    return Object.keys(json).filter(key => !json[key].optional);
+
+const parseDescriptionForTags = (fullDescription: string, structures: ValidatorStructure<any>[]): TypedTags => {
+    const tags: TypedTags = [];
+
+    // Handle all regular tags defined in the predefined or custom tags.
+    for (const structure of structures) {
+        for (const tag of Object.keys(structure.tags)) {
+            const test = new RegExp(`@${tag}(.*)\r?\n?`);
+            const tagValue = test.exec(fullDescription)?.[1]?.trim();
+            tags.push([structure.name, tag, tagValue]);
+        }
+    }
+
+    // Handle the special "@error { ... }" tag for providing custom error messages within a type.
+    const errorTagTest = new RegExp("@error (.*)$", "s"); // the error message must be last because it supports text field, no usable delimiter
+    const errorTagValue = errorTagTest.exec(fullDescription)?.[1]?.trim();
+    tags.push(["json", "@error", errorTagValue]);
+
+    return tags;
 };
 
+const addTagValidations = (jsonSchemaValidator: Validator, structures: ValidatorStructure<any>[]): Validator => {
+    const validateDescriptionTags = (input: unknown, schema: Schema, options: Options, ctx: SchemaContext): string | ValidatorResult => {
+        const result = new ValidatorResult(input, schema, options, ctx);
+
+        if (!("fullDescription" in schema)) return result; // Only try to parse nodes that have schema.fullDescription
+        if (typeof schema.fullDescription !== "string") {
+            throw new SchemaError("All fullDescription fields must be strings!", schema);
+        }
+
+        // Some structures share tags, e.g. string's min and number's min. So for each invocation of a tag, look through
+        // every structure
+        const allTags = parseDescriptionForTags(schema.fullDescription, structures);
+        for (const [type, tag, tagValue] of allTags) {
+            if (tagValue === undefined) continue; // The description did not contain that tag
+
+            for (const structure of structures) {
+                if (type !== structure.name) continue; // number tags not applicable to string validators
+                if (!(tag in structure.tags)) continue; // if this structure doesn't declare that tag
+                if (!structure.is(input)) continue; // e.g. string validators do nothing on non-strings
+
+                const tagFn = structure.tags[tag];
+
+                if (tagValue === "") {
+                    // If there is no annotation comment, like: `@alphanumeric`.
+                    if (!tagFn(input, "")) {
+                        return handleNoCommentTag(result, allTags, tag, input);
+                    }
+                } else {
+                    // If there is some annotation comment, like `@oneOf strict thing` contains "strict thing"
+                    if (!tagFn(input, tagValue)) {
+                        return handleCommentTag(result, allTags, tag, tagValue, input);
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
+    jsonSchemaValidator.attributes.fullDescription = validateDescriptionTags;
+
+    return jsonSchemaValidator;
+};
 
 export const createCustomValidate = (tags?: {
     string?: TagValidator<string>,
     number?: TagValidator<number>,
 }, throwError?: boolean) => {
-    const validators = updateValidators(tags);
 
-    const optionalThrow = (message: string) => {
-        if (throwError) {
-            throw new Error("ValidationError: " + message);
-        }
-    };
-
-    const validateUnion = (json: Array<JsonType>, input: any) => {
-        const valid = true;
-        if (json.includes(input)) {
-            return valid;
-        }
-
-        for (const schema of json) {
-            if (typeof schema !== "object") {
-                continue;
-            }
-
-            if (validateJsonType(schema, input, true)) {
-                return true;
-            }
-
-        }
-
-        optionalThrow(`Literal type mismatch, expected one of [${json.map(s => s.children)}] but got [${input}]`);
-        return false;
-    };
-
-    const validateArray = (json: Array<JsonType>, input: any) => {
-        if (!Array.isArray(input)) {
-            optionalThrow(`Expected an array and got [${typeof input}]`);
-            return false;
-        }
-
-        if (!json.length && !input.length) {
-            return true;
-        }
-
-        if (json.length === 1) {
-            for (const item of input) {
-                if (!validateJsonType(json[0], item)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        for (const item of input) {
-            if (!validateUnion(json, item)) {
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    const validateIntersection = (json: Array<JsonType>, input: any) => {
-        if (json.length < 2) {
-            optionalThrow(`Intersection types must have >= 2 children, got ${json.length} children!`);
-            return false;
-        }
-
-        for (const childValidation of json) {
-
-            if (!validateJsonType(childValidation, input)) {
-                console.log("intersection failed validate on schema", childValidation, " on input ", input);
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-
-    const validateObject = (json: JsonSchema, input: any) => {
-        const requiredKeys = getAllRequiredKeys(json);
-
-        for (const key of requiredKeys) {
-            if (!input.hasOwnProperty(key)) {
-                optionalThrow(`Object doesn't have expected property [${key}], it has the following keys - ${Object.keys(input)}`);
-                return false;
-            }
-        }
-
-        for (const key of Object.keys(input)) {
-            const val = input[key];
-            const schema = json[key];
-
-            if (!schema) {
-                continue;
-            }
-
-            if (!validateJsonType(schema, val)) {
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    const validateJsonType = (json: JsonType, input: any, fromUnion = false) => {
-        const { type, optional, union, intersection, tags, children, array, primitive, literal } = json;
-
-        if (optional && (input === undefined || input === null)) {
-            return true;
-        }
-
-        if (optional && children && children.length) {
-            if (!validateJsonType(children[0], input, fromUnion)) {
-                return false;
-            }
-
-            return true;
-        }
-
-        if (literal) {
-            if (input !== children) {
-                if (!fromUnion) {
-                    optionalThrow(`Literal type mismatch, expected one of [${json.children}] but got [${input}]`);
-                }
-
-                return false;
-            }
-            return true;
-        }
-
-        if (primitive) {
-            if (!validators[type]) {
-                return true;
-            }
-
-            if (!validators[type](input, tags, throwError)) {
-                return false;
-            }
-            return true;
-        }
-
-        if (array && children && children.length) {
-            if (!validateArray(children as unknown as JsonType[], input)) {
-                return false;
-            }
-            return true;
-        }
-
-        if (intersection && children && children.length) {
-            if (!validateIntersection(children as unknown as JsonType[], input)) {
-                return false;
-            }
-            return true;
-        }
-
-        if (union && children && children.length) {
-            if (!validateUnion(children as unknown as JsonType[], input)) {
-                return false;
-            }
-            return true;
-        }
-
-        if (children && typeof children === "object" && !union && !intersection && !primitive && !array) {
-            if (!validateObject(children as JsonSchema, input)) {
-                return false;
-            }
-            return true;
-        }
-
-        return true;
-    };
+    const jsonSchemaValidator = addTagValidations(new Validator(), [
+        { ...STRING_VALIDATOR, tags: { ...STRING_VALIDATOR.tags, ...tags?.string }},
+        { ...NUMBER_VALIDATOR, tags: { ...NUMBER_VALIDATOR.tags, ...tags?.number }}
+    ]);
 
     const validate = <T>(json: string) => {
-        const obj = JSON.parse(json) as JsonType;
+        const schema = JSON.parse(json);
 
         return (input: T) => {
-            return validateJsonType(obj, input);
+            const result = jsonSchemaValidator.validate(input, schema, {
+                "allowUnknownAttributes": true,
+                "nestedErrors": true,
+                "required": true,
+                "throwAll": false,
+                "throwError": false,
+            });
+
+            if (result.valid) {
+                return true;
+            } else if (throwError) {
+                const errorData = {
+                    tag: "ValidationError",
+                    errors: result.errors.map(e => ({
+                        data: e.instance,
+                        message: e.message,
+                        path: e.path
+                    }))
+                };
+
+                throw new Error(JSON.stringify(errorData));
+            } else {
+                return false;
+            }
         };
     };
 

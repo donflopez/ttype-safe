@@ -156,26 +156,31 @@ describe('Test type tags', () => {
         // expect(NumberAliasValidator(100)).toBe(false);
     });
 
+    test('Prohibited types (functions, ...) are not allowed', () => {
+        type Person = {
+            /**
+             * @onlyOneParameter
+             */
+            fn: (arg: string) => number;
+        }
+
+         const PersonValidator = validate<Person>($schema<Person>());
+        expect(PersonValidator({ fn: (arg: string) => arg.length })).toBe(false);
+    })
+
     test('Non-existent tags do nothing', () => {
         type Person = {
             /**
              * @doesNotExist
              */
             name: string;
-
-            fn: () => void;
         }
         const PersonValidator = validate<Person>($schema<Person>());
-        expect(PersonValidator({ name: 'Francisco', fn: () => void 0 })).toBe(true);
+        expect(PersonValidator({ name: 'Francisco' })).toBe(true);
     });
 
-    test('Non-supported primitives do nothing', () => {
+    test("Symbols work", () => {
         type Person = {
-            /**
-             * @max 99
-             */
-            name: bigint;
-
             /**
              * @max 99
              * @min 0
@@ -185,9 +190,21 @@ describe('Test type tags', () => {
              */
             symbol: symbol;
         }
-        const PersonValidator = validate<Person>($schema<Person>());
 
-        expect(PersonValidator({ name: 123n, symbol: Symbol("Some") })).toBe(true);
+        const PersonValidator = validate<Person>($schema<Person>());
+        expect(PersonValidator({ symbol: Symbol("Some") })).toBe(true);
+    });
+
+    test('Non-supported primitives fail', () => {
+        type Person = {
+            /**
+             * @max 99
+             */
+            name: bigint;
+        }
+
+        const PersonValidator = validate<Person>($schema<Person>());
+        expect(PersonValidator({ name: 123n })).toBe(false);
     });
 
     test('Generic types', () => {
@@ -350,8 +367,29 @@ describe('Test type tags', () => {
         expect(JobValidator({ role: Role.Manager, company: 'Amazon', level: 'L5' })).toBe(true);
 
         // Not valid
-        expect(() => JobValidator({ role: 'some' as any, company: 'Amazon', level: 'L5' })).toThrow('ValidationError: Literal type mismatch, expected one of [0,1] but got [some]');
-        expect(() => JobValidator({ role: Role.Admin, company: 'Amazon', level: 'L7' as 'L5' })).toThrow('ValidationError: Literal type mismatch, expected one of [L4,L5] but got [L7]');
+        expect(() => JobValidator({ role: 'some' as any, company: 'Amazon', level: 'L5' })).toThrow(JSON.stringify({
+            tag: "ValidationError",
+            errors: [
+                {
+                    data: "some",
+                    message: "is not of a type(s) number",
+                    path: ["role"]
+                },
+                {
+                    data: "some",
+                    message: "is not one of enum values: 0,1",
+                    path: ["role"]
+                }
+            ]
+        }));
+        expect(() => JobValidator({ role: Role.Admin, company: 'Amazon', level: 'L7' as 'L5' })).toThrow(JSON.stringify({
+            tag: "ValidationError",
+            errors: [{
+                data: "L7",
+                message: "is not one of enum values: L4,L5",
+                path: ["level"]
+            }]
+        }));
     });
 
     test('Custom validator that throws with literal', () => {
@@ -362,7 +400,21 @@ describe('Test type tags', () => {
 
         const PersonValidator = createCustomValidate({}, true)<Person>($schema<Person>());
 
-        expect(() => PersonValidator({ schemaVersion: 'string' as unknown as 1, name: 'Francisco' })).toThrow('ValidationError: Literal type mismatch, expected one of [1] but got [string]');
+        expect(() => PersonValidator({ schemaVersion: 'string' as unknown as 1, name: 'Francisco' })).toThrow(JSON.stringify({
+            tag: "ValidationError",
+            errors: [
+                {
+                    data: "string",
+                    message: "is not of a type(s) number",
+                    path: ["schemaVersion"],
+                },
+                {
+                    data: "string",
+                    message: "does not exactly match expected constant: 1",
+                    path: ["schemaVersion"]
+                }
+            ]
+        }));
     });
 
     test('Person type literals', () => {
@@ -487,9 +539,23 @@ describe('Test type tags', () => {
         expect(PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 10, public: true}, age: 1 })).toBe(true);
 
 
-        expect(() => PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 150, public: true} })).toThrowError(new Error(`ValidationError: Tag validation [between] and comment [10-20] didn't succeed for value [150]`));
+        expect(() => PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 150, public: true} })).toThrowError(JSON.stringify({
+            tag: "ValidationError",
+            errors: [{
+                data: 150,
+                message: "did not match validator [between] [10-20]",
+                path: ["company", "employees"]
+            }]
+        }));
 
-        expect(() => PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 15, public: true} , age: -1},)).toThrowError(new Error(`ValidationError: Tag validation [min] and comment [0] didn't succeed for value [-1]`));
+        expect(() => PersonValidator({ name: 'Francisco', company: {name: 'Some', employees: 15, public: true} , age: -1},)).toThrowError(JSON.stringify({
+            tag: "ValidationError",
+            errors: [{
+                data: -1,
+                message: "did not match validator [min] [0]",
+                path: ["age"]
+            }]
+        }));
     });
 
     test('Expect array to fail when type changes', () => {
@@ -504,7 +570,12 @@ describe('Test type tags', () => {
 
         expect(PostValidator({keywords: ['a', 'b', 'c'], title: 'Awesome library', content: 'This should be included in TS by default'})).toBe(true);
         expect(() => PostValidator({keywords: ['a', 'b', 'c', ['d']] as string[], title: 'Awesome library', content: 'This should be included in TS by default'})).toThrowError();
-        expect(() => PostValidator({keywords: ['a', 'b', 'c', ['d', {some: 'v'}]] as string[], title: 'Awesome library', content: 'This should be included in TS by default'})).toThrow(new Error('ValidationError: Value [d,[object Object]] is not of type [string].'));
+        expect(() => PostValidator({keywords: ['a', 'b', 'c', ['d', {some: 'v'}]] as string[], title: 'Awesome library', content: 'This should be included in TS by default'})).toThrow(JSON.stringify({
+            tag: "ValidationError",
+            errors: [{ data: ["d", { some: "v" }],
+            message: "is not of a type(s) string",
+            path: ["keywords", 3]
+        }]}));
     });
 
     test('Error description tag', () => {
@@ -531,9 +602,30 @@ describe('Test type tags', () => {
         const validate = createCustomValidate({}, true);
         const PersonValidator = validate<Person>($schema<Person>());
 
-        expect(() => PersonValidator({id: '1312d', age: 21, height: 186})).toThrowError(new Error(`ValidationError on tag [regex] with error message: \nThe id should be a string of length 9 and include only lower case characters. Ex abcdefghi. You provided [1312d]`));
-        expect(() => PersonValidator({id: 'abcdefghi', age: 289, height: 186})).toThrowError(new Error(`ValidationError on tag [max] with error message: \nNo human on earth has reached beyond 150 years old and you provided [289].`));
-        expect(() => PersonValidator({id: 'abcdefghi', age: -1, height: 186})).toThrowError(new Error(`ValidationError on tag [min] with error message: \nA person cannot be less than 0 years old yet.`));
+        expect(() => PersonValidator({id: '1312d', age: 21, height: 186})).toThrowError(JSON.stringify({
+            tag: "ValidationError",
+            errors: [{
+                data: "1312d",
+                message: "did not match validator [regex] [/[a-z]{9}/] with error message: The id should be a string of length 9 and include only lower case characters. Ex abcdefghi. You provided [1312d]",
+                path: ["id"]
+            }]
+        }));
+        expect(() => PersonValidator({id: 'abcdefghi', age: 289, height: 186})).toThrowError(JSON.stringify({
+            tag: "ValidationError",
+            errors: [{
+                data: 289,
+                message: "did not match validator [max] [150] with error message: No human on earth has reached beyond 150 years old and you provided [289].",
+                path: ['age']
+            }]
+        }));
+        expect(() => PersonValidator({id: 'abcdefghi', age: -1, height: 186})).toThrowError(JSON.stringify({
+            tag: "ValidationError",
+            errors: [{
+                data: -1,
+                message: "did not match validator [min] [0] with error message: A person cannot be less than 0 years old yet.",
+                path: ["age"]
+            }]
+        }));
     });
 
     test('Error description tag for custom tags', () => {
@@ -555,7 +647,14 @@ describe('Test type tags', () => {
 
         const PersonValidator = validate<Person>($schema<Person>());
 
-        expect(() => PersonValidator({id: 8 })).toThrowError(new Error(`ValidationError on tag [just9] with error message: \nJust 9 characters!!!! You provided [8]`));
+        expect(() => PersonValidator({id: 8 })).toThrowError(JSON.stringify({
+            tag: "ValidationError",
+            errors: [{
+                data: 8,
+                message: "did not match validator [just9] with error message: Just 9 characters!!!! You provided [8]",
+                path: ["id"]
+            }]
+        }));
     });
 
     test('Fixing array type aliases', () => {

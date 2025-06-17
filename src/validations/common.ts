@@ -1,56 +1,35 @@
+import { ValidatorResult } from "jsonschema";
+
 export type isTypeFn = (x: any) => boolean;
 export type Tag = (value: any, comment: string) => boolean;
 export type Tags = Record<string, Tag>;
 
-export const handleCustomError = <T>(tag: string, value: T, error: string) => {
-    if (error.trim()[0] === "{") {
+export type TypedTags = [type: string, tag: string, value: string|undefined][];
 
-        const customErrorObject = JSON.parse(error);
+const customErrorSuffix = (allTags: TypedTags, tag: string, input: unknown): string => {
+    const errorTag: TypedTags[number] | undefined = allTags.find(([, tag]) => tag === "@error");
+    if (!errorTag || !errorTag[2]) return "";
 
-        if (customErrorObject[tag]) {
-            const message = customErrorObject[tag];
+    let errorMsg: string;
+    if (errorTag[2].trim()[0] === "{") {
+        const errorJson = JSON.parse(errorTag[2]);
+        if (!(tag in errorJson)) return "";
 
-            throw new Error(`ValidationError on tag [${tag}] with error message: \n${message.replaceAll("\n", " ").replaceAll("[value]", `[${value}]`)}`);
-        }
+        errorMsg = errorJson[tag];
+    } else {
+        errorMsg = errorTag[2];
     }
 
-    throw new Error(`ValidationError on tag [${tag}] with error message: \n${error.replaceAll("\n", " ").replaceAll("[value]", `[${value}]`)}`);
+    return " with error message: " + errorMsg.replaceAll("\n", " ").replaceAll("[value]", `[${input}]`);
 };
 
-export const throwTagError = <T>(tag: string, comment: string, value: T, tags: string[][]) => {
-    const customError = tags.find(tag => tag[0] === "error");
-    if (customError) {
-        handleCustomError(tag, value, customError[1]);
-    }
-    else {
-        throw new Error(`ValidationError: Tag validation [${tag}] and comment [${comment}] didn't succeed for value [${value}]`);
-    }
+export const handleNoCommentTag = (result: ValidatorResult, allTags: TypedTags, tag: string, input: unknown): ValidatorResult => {
+    result.addError(`did not match validator [${tag}]${customErrorSuffix(allTags, tag, input)}`);
+    return result;
 };
 
-export const throwPrimitiveError = <T>(primitive: string, value: T) => {
-    throw new Error(`ValidationError: Value [${value}] is not of type [${primitive}].`);
+export const handleCommentTag = (result: ValidatorResult, allTags: TypedTags, tag: string, tagValue: string, input: unknown): ValidatorResult => {
+    result.addError(`did not match validator [${tag}] [${tagValue}]${customErrorSuffix(allTags, tag, input)}`);
+    return result;
 };
 
-export const createValidatorFor = <T>(name: string, isTypeFn: isTypeFn, rules: Tags) => (value: T, tags: string[][], shouldThrow = false) => {
-    if (!isTypeFn(value)) {
-        
-        if (shouldThrow) {
-            throwPrimitiveError(name, value);
-        }
-        
-        return false;
-    }
-
-    for (const [tag, comment] of tags) {
-        if (rules[tag]) {
-            if (!rules[tag](value, comment)) {
-                if (shouldThrow) {
-                    throwTagError(tag, comment, value, tags);
-                }
-                return false;
-            }
-        }
-    }
-
-    return true;
-};

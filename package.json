@@ -23,7 +23,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "npx eslint",
+    "lint": "npx eslint '{src,tests}/**/*.ts'",
+    "lint:fix": "npx eslint --fix '{src,tests}/**/*.ts'",
     "test": "jest",
     "prepublishOnly": "tsc",
     "docs": "npx ts-docs",
@@ -62,5 +63,9 @@
         }
       ]
     }
+  },
+  "dependencies": {
+    "jsonschema": "^1.5.0",
+    "ts-json-schema-generator": "^2.5.0-next.2"
   }
 }
