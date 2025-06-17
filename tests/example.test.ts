@@ -16,6 +16,16 @@ describe('Test type tags', () => {
         expect(PersonValidator({ name: '', age: '12' as unknown as number, alive: true })).toBe(false);
     });
 
+    test('Person type literals', () => {
+        type Person = {
+            schemaVersion: 1;
+            name: string;
+        };
+
+        const PersonValidator = validate<Person>($schema<Person>());
+        expect(PersonValidator({ schemaVersion: 1, name: 'Francisco' })).toBe(true);
+    });
+
     test('Simple Person type with tags', () => {
         type SimplePerson = {
             /**
