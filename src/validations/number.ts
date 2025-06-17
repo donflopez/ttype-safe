@@ -1,11 +1,11 @@
-import { Tags, createValidatorFor } from "./common";
+import { ValidatorStructure } from ".";
 
-const isNumber = (x: any): x is number => typeof x === "number";
+const isNumber = (x: unknown): x is number => typeof x === "number";
 
 const TAGS = {
     /**
      * Use this tag to validate if a number is less than or equal to a given number
-     * 
+     *
      * @example
      * ```ts
      * type Ranges = {
@@ -15,15 +15,15 @@ const TAGS = {
      *   end: number;
      * }
      * ```
-     * @param value 
-     * @param max 
+     * @param value
+     * @param max
      * @returns true if value is less than or equal to max
      */
     max: (value: number, max: string) => value <= parseInt(max),
 
     /**
      * Use this tag to validate if a number is greater than or equal to a given number
-     * 
+     *
      * @example
      * ```ts
      * type Ranges = {
@@ -40,6 +40,8 @@ const TAGS = {
     min: (value: number, min: string) => value >= parseInt(min),
 };
 
-export const validateNumber = createValidatorFor("number", isNumber, TAGS);
-
-export const customNumberValidator = (tags: Tags) => createValidatorFor<number>("number", isNumber, {...TAGS, ...tags});
+export const NUMBER_VALIDATOR: ValidatorStructure<number> = {
+    name: "number",
+    is: isNumber,
+    tags: TAGS,
+};

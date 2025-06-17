@@ -151,6 +151,7 @@ describe('Test string tags', () => {
     test('union', () => {
         type TestUnionEmail = {
             /**
+             * ignored wow@
              * @email
              */
             emailOrAlphanumeric: string;
@@ -222,3 +223,21 @@ describe('Test string tags', () => {
         expect(TestNotemptyValidator({ text: "" })).toBe(false);
     })
 })
+
+type TestUnionEmail = {
+    /**
+     * some email
+     * @some email
+     * @email SomeValueHere!
+     */
+    emailOrAlphanumeric: string;
+}
+
+type TestUnionAlphanumeric = {
+    /**
+     * @alphanumeric value
+     */
+    emailOrAlphanumeric: string;
+}
+
+export type TestUnion = TestUnionEmail | TestUnionAlphanumeric;
