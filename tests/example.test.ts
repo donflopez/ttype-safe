@@ -16,6 +16,32 @@ describe('Test type tags', () => {
         expect(PersonValidator({ name: '', age: '12' as unknown as number, alive: true })).toBe(false);
     });
 
+    test('Person type literals', () => {
+        type Person = {
+            schemaVersion: 1;
+            name: string;
+        };
+
+        const PersonValidator = validate<Person>($schema<Person>());
+        expect(PersonValidator({ schemaVersion: 1, name: 'Francisco' })).toBe(true);
+    });
+
+    test('Recursive', () => {
+        type TestJsonLike = string | null | number | { [key: string] : TestJsonLike } | TestJsonLike[];
+
+        const TestJsonLikeValidator = validate<TestJsonLike>($schema<TestJsonLike>());
+
+        expect(TestJsonLikeValidator(null)).toBe(true);
+        expect(TestJsonLikeValidator(2)).toBe(true);
+        expect(TestJsonLikeValidator('something')).toBe(true);
+        expect(TestJsonLikeValidator([])).toBe(true);
+        expect(TestJsonLikeValidator({ key: null })).toBe(true);
+        expect(TestJsonLikeValidator({ key: 2 })).toBe(true);
+        expect(TestJsonLikeValidator({ key: "something" })).toBe(true);
+        expect(TestJsonLikeValidator({ key: { key: "something" } })).toBe(true);
+        expect(TestJsonLikeValidator({key: [2, null, { key: "something" }]})).toBe(true);
+    });
+
     test('Simple Person type with tags', () => {
         type SimplePerson = {
             /**
